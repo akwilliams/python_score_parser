@@ -74,7 +74,7 @@ run_1,img=draw_boxes_by_params('score.png',17,17,9,150,[-1,-1],[0.0005,0.33],Tru
 #total_area=get_total_bx_area(boxes)
 boxes.append(run_0)
 boxes.append(run_1)
-#vwrite_bndng_bx_csv(boxes)
+write_bndng_bx_csv(boxes)
 #print(boxes)
 
 
