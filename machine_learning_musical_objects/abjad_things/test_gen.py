@@ -107,6 +107,31 @@ def gen_note_dur(dur_min,dur_max,subdivision):
     dur.append(ab.Duration(numerator,denominator))
     return dur,((numerator+(4*index))/denominator)
 
+def gen_measure_dur(time_sig=(4,4),seed=[(1/4)]):
+  mm_durations=[]
+  seed_sum=sum(seed)
+  mm_len=time_sig[0]/time_sig[1]
+  if seed_sum == mm_len:
+    iter_seed=1
+    iter_dur=len(seed)
+  elif mm_len%seed_sum==0:
+    iter_seed=int(mm_len/seed_sum)
+    iter_dur=len(seed)
+  else:
+    #thing
+    
+  
+  
+  return mm_durations
+    
+
+
+
+
+
+
+
+
 time_sig_=(9,8)
 staff=ab.Staff(gen_measure(time_sig=time_sig_,note_count_min=3,note_count_max=14,pitchset=[1,2,4,6,7,9,11],min_dur=(1/16)))
 time_sig_o=ab.TimeSignature(time_sig_)
