@@ -88,19 +88,21 @@ def write_bndng_bx_pd_df(calc_pass,identity):
     return temp_df_0,temp_df_1
             
             
-def find_staves(img):
+def find_staves(img,thresh=100,width_ratio=(1/2)):
     stave_temp=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
     height,width=stave_temp.shape[:2]
-    filter_arg=int(width/2)#This needs to be dynamid
+    filter_arg=int(width*width_ratio)
     filter_arg=filter_arg if filter_arg%2==1 else filter_arg+1
-    hold,img=draw_boxes_by_params(stave_temp,filter_arg,1,0,165,[-1,-1],[-1,-1],True)#threshold needs to be dynamic
+    hold,img=draw_boxes_by_params(stave_temp,filter_arg,1,0,thresh,[-1,-1],[-1,-1],False)
     df_0,df_1 = write_bndng_bx_pd_df([hold],'stave_line')
     df_1['height'],df_1['width']=df_1.min(axis=1),df_1.max(axis=1)
     df = pd.concat([df_0,df_1],axis=1)
-    for i in range(df.shape[0]%5):    
+    for i in range(df.shape[0]%5):  
+        print(df['width'].std(axis=0))
         mean,std=df['width'].mean(axis=0),df['width'].std(axis=0)
         df['id']=np.where(np.abs(df['width']-mean)>std,'miss_id,find_staves','stave_line')
         df=df.drop(df.index[np.where(df['id']!='stave_line')[0][0]])
+        print(df['width'].std(axis=0))
     print(df)
     if df.shape[0]%5!=0:
         print('something is off')
@@ -108,45 +110,8 @@ def find_staves(img):
     return df,img
 
 
-#data,img_0=find_staves('score.png')
-#cv2.imshow('img',img_0)
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
-#
-#print(type('thing'))
-#boxes=[]
-##run_0,img=draw_boxes_by_params('score.png',11,11,9,150,[-1,-1],[-0.005,0.005],True)
-##run_1,img=draw_boxes_by_params('score.png',17,17,9,150,[2500,10000],[0.0005,0.33],True)
-#num = 884/21
-#num = num if num%2 == 1 else num+1
-#num=int(num)
-#print(num)
-#img_0=cv2.imread('score.png',cv2.IMREAD_GRAYSCALE)
-#height,width=img_0.shape[:2]
-#print(width)
-#run_1,img=draw_boxes_by_params('source/scores/img_4.png',1,1,0,150,[-1,-1],[-1,-1],True)
-##img_2=cv2.imread('score.png',cv2.IMREAD_GRAYSCALE)
-##img_2=cv2.GaussianBlur(img_2,(3,3),9)
-##th,img_2=cv2.threshold(img_2,45,255,cv2.THRESH_BINARY_INV)
-##img_2=cv2.GaussianBlur(img_2,(9,9),1)
-##img_3=cv2.subtract(img_2,img)
-##img_3=cv2.imread('score.png',cv2.IMREAD_GRAYSCALE)
-##th,img_4=cv2.threshold(img_3,45,255,cv2.THRESH_BINARY_INV)
-##img_4=cv2.GaussianBlur(img_3,(1257,1),0)
-##th,img_4=cv2.threshold(img_3,150,255,cv2.THRESH_BINARY)
-##total_area=get_total_bx_area(boxes)
-##boxes.append(run_0)
-##boxes.append(run_1)
-##write_bndng_bx_csv(boxes)
-##print(boxes)
-#
-#
-##load_srcs()
-#
-#
-#
-#
-#
-#cv2.imshow('img',img)
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
+data,img_0=find_staves('source/scores/img_0.png',45,(2/3))
+img_1=cv2.imread('source/scores/img_0.png')
+cv2.imshow('img',img_1)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
