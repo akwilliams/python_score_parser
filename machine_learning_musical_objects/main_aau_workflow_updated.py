@@ -155,6 +155,7 @@ def find_stave_data(img,init_thresh=45,init_w_ratio=(1/2)):
 
 
 
+
 data,img_0=parse_staves('source/scores/img_4.png',190,(2/3))
 img_1=cv2.imread('score.png')
 
