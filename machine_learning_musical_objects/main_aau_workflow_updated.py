@@ -89,6 +89,8 @@ def write_bndng_bx_pd_df(calc_pass,identity):
             
             
 def parse_staves(img,thresh=100,width_ratio=(1/2)):
+    if isinstance(img,str):
+        img=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
     stave_temp=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
     height,width=stave_temp.shape[:2]
     filter_arg=int(width*width_ratio)
@@ -99,27 +101,55 @@ def parse_staves(img,thresh=100,width_ratio=(1/2)):
     df = pd.concat([df_0,df_1],axis=1)
     return df,img
 
-def find_score_bounds(img,thresh=0.5):
-    hold,score_temp=draw_boxes_by_params(img,1,1,0,200,[-1,-1],[-1,-1],False)
-    height, width=score_temp.shape[:2]
+def find_score_bounds(img,thresh=0.5,size_ratio=0.1):
+    temp_img=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
+    height,width=temp_img.shape[:2]
+    hold,score_temp=draw_boxes_by_params(temp_img,1,1,0,200,[(height*width*size_ratio),(height*width)],[-1,-1],False)
     temp_df=pd.DataFrame([[0,width/2,height/2,'img_bounds',height,width,(height*width)]],columns=['angle','center_x','center_y','id','height','width','area'])
     df,df_1=write_bndng_bx_pd_df([hold],'score_bounds')
     df_1['height'],df_1['width']=df_1.min(axis=1),df_1.max(axis=1)
     df_1['area']=df_1.apply(lambda row: row.height*row.width, axis=1)
     df=pd.concat([df,df_1],axis=1)
-    df=df.sort_values('area',ascending=False)
-    df=df.reset_index(drop=True)
-    maximum=df['area'][0]
-    df=df.drop(df.index[np.where((df['area']/maximum)<thresh)[0]])
+    df=df.drop(df.index[np.where((df['area']/df['area'].max()<thresh))[0]])
     df=df.append(temp_df)
     df=df.reset_index(drop=True)
-    return df
+    return df,score_temp
 
+def calc_perc_off_mean(df,index,destination):
+    mean=df[index].mean()
+    df[destination]=np.abs(df[index]-mean)/mean
+    return df   
 
-def find_stave_data(img,init_thresh=45,init_w_ratio=(1/2)):
+def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thresh=45,width_ratio_std=0.8,width_thresh=0.2):
     #find the bounds of the total image
-    
-    temp_df,temp_img=parse_staves(img,init_thresh,init_w_ratio)
+    #img_info is a df containing the bounds of the image and system/staff
+    img_info,temp_img=find_score_bounds(img,bounds_thresh,bounds_size_ratio)
+    #Width ratio is calculated by taking the relationship between the image and score bounds
+    #and is adjusted by amount of standard deviation which only needs to be implamented in the negative direction
+    width_ratio=width_ratio_std*img_info['width'][np.where(img_info['id']=='score_bounds')[0][0]]/img_info['width'][np.where(img_info['id']=='img_bounds')[0][0]]
+    temp_df,temp_img=parse_staves(img,init_filter_thresh,width_ratio)
+    #Check the delta y in temp_df
+    temp_df=calc_perc_off_mean(temp_df,'width','percent_off_mean_width')
+    #mean=temp_df['width'].mean()
+    #temp_df['percent_off_mean']=np.abs(temp_df['width']-mean)/mean
+    temp_df_working=temp_df.copy()
+    for index in range(len(temp_df.index)):
+        if temp_df_working['percent_off_mean_width'].max()<width_thresh:
+            break
+        else:
+            temp_df_working=temp_df_working.drop(temp_df_working.index[np.where(temp_df_working['percent_off_mean_width']==temp_df_working['percent_off_mean_width'].max())[0][0]])
+            temp_df_working=calc_perc_off_mean(temp_df_working,'width','percent_off_mean_width')
+    temp_df['delta_y']=temp_df.center_y.diff().shift(-1)
+    width_corrected_index=temp_df_working.index.tolist()
+    print(width_corrected_index)
+    print(len(width_corrected_index)%5)
+#    bounds = []
+#    for location in np.where(img_info['id']=='score_bounds')[0]:
+#        bounds.append([[img_info['center_x'][location]-((img_info['width'][location])/2),img_info['center_y'][location]-((img_info['height'][location])/2)],[img_info['center_x'][location]+((img_info['width'][location])/2),img_info['center_y'][location]+((img_info['height'][location])/2)]])
+#    print(bounds)
+#    print(temp_df)
+#    
+    return temp_img
     #Now I need to analyse the data
     '''
     Kind of things I need to look at:
@@ -131,68 +161,14 @@ def find_stave_data(img,init_thresh=45,init_w_ratio=(1/2)):
     
     '''
 
-
-
-
-
-
-#    for i in range(df.shape[0]%5):  
-#        print(df['width'].std(axis=0))
-#        mean,std=df['width'].mean(axis=0),df['width'].std(axis=0)
-#        df['id']=np.where(np.abs(df['width']-mean)>std,'miss_id,find_staves','stave_line')
-#        df=df.drop(df.index[np.where(df['id']!='stave_line')[0][0]])
-#        print(df['width'].std(axis=0))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 data,img_0=parse_staves('source/scores/img_4.png',190,(2/3))
-img_1=cv2.imread('score.png')
+img_1=cv2.imread('source/scores/img_6.png')
 
-df=find_score_bounds('score.png',0.65)
+df=find_score_bounds('source/scores/img_4.png',0.65,0.01)
 print(df)
 
+img_2=find_stave_data('source/scores/img_6.png',init_filter_thresh=145,width_thresh=0.50)
 
-#
-#hold,img=draw_boxes_by_params('source/scores/img_6.png',1,1,0,200,[-1,-1],[-1,-1],True)
-#height, width=img.shape[:2]
-#temp_df=pd.DataFrame([[0,width/2,height/2,'img_bounds',height,width,(height*width)]],columns=['angle','center_x','center_y','id','height','width','area'])
-#df,df_1=write_bndng_bx_pd_df([hold],'score_bounds')
-#df_1['height'],df_1['width']=df_1.min(axis=1),df_1.max(axis=1)
-#df_1['area']=df_1.apply(lambda row: row.height*row.width, axis=1)
-#df=pd.concat([df,df_1],axis=1)
-#df=df.sort_values('area',ascending=False)
-#df=df.reset_index(drop=True)
-#print(df.loc[2])
-#maximum=df['area'][0]
-#print(maximum)
-#print(np.where((df['area']/maximum)<0.5)[0])
-#df=df.drop(df.index[np.where((df['area']/maximum)<0.5)[0]])
-#print(df)
-#df=df.append(temp_df)
-#df=df.reset_index(drop=True)
-#print(df)
-
-#
-#df_1['area']=df_1.apply(lambda row: row.height*row.width, axis=1)
-#mean,std=df_1['area'].mean(axis=0),df_1['area'].std(axis=0)
-#df_1['area']=np.where(df_1['area']<mean,-1,df_1['area'])
-#df_1=df_1.drop(df_1.index[np.where(df_1['area']==-1.0)[0]])
-#print(df_1)
-#mean,std=df_1['area'].mean(axis=0),df_1['area'].std(axis=0)
-#print(df_1['area'].max(axis=0)-df_1['area'].min(axis=0))
-#print(mean,std)
-
-cv2.imshow('img',img_1)
+cv2.imshow('img',img_2)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
