@@ -91,7 +91,9 @@ def write_bndng_bx_pd_df(calc_pass,identity):
 def parse_staves(img,thresh=100,width_ratio=(1/2)):
     if isinstance(img,str):
         img=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
-    stave_temp=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
+#    else:
+#        temp=img
+    stave_temp=img
     height,width=stave_temp.shape[:2]
     filter_arg=int(width*width_ratio)
     filter_arg=filter_arg if filter_arg%2==1 else filter_arg+1
@@ -139,6 +141,7 @@ def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thr
         else:
             temp_df_working=temp_df_working.drop(temp_df_working.index[np.where(temp_df_working['percent_off_mean_width']==temp_df_working['percent_off_mean_width'].max())[0][0]])
             temp_df_working=calc_perc_off_mean(temp_df_working,'width','percent_off_mean_width')
+            print(temp_df_working)
     temp_df['delta_y']=temp_df.center_y.diff().shift(-1)
     width_corrected_index=temp_df_working.index.tolist()
     print(width_corrected_index)
@@ -161,11 +164,11 @@ def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thr
     
     '''
 
-data,img_0=parse_staves('source/scores/img_4.png',190,(2/3))
-img_1=cv2.imread('source/scores/img_6.png')
-
-df=find_score_bounds('source/scores/img_4.png',0.65,0.01)
-print(df)
+#data,img_0=parse_staves('source/scores/img_4.png',190,(2/3))
+#img_1=cv2.imread('source/scores/img_6.png')
+#
+#df=find_score_bounds('source/scores/img_4.png',0.65,0.01)
+#print(df)
 
 img_2=find_stave_data('source/scores/img_6.png',init_filter_thresh=145,width_thresh=0.50)
 
