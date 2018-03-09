@@ -137,40 +137,23 @@ def drop_value_below_threshold(df,ident,threshold):
     return df
 
 def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thresh=45,width_ratio_std=0.8,width_thresh=0.2,delta_y_thresh=0.4):
-#    #find the bounds of the total image
-#    #img_info is a df containing the bounds of the image and system/staff
-#    img_info,temp_img=find_score_bounds(img,bounds_thresh,bounds_size_ratio)
-#    print(img_info)
-#    #Width ratio is calculated by taking the relationship between the image and score bounds
-#    #and is adjusted by amount of standard deviation which only needs to be implamented in the negative direction
-#    width_ratio=width_ratio_std*img_info['width'][np.where(img_info['id']=='score_bounds')[0][0]]/img_info['width'][np.where(img_info['id']=='img_bounds')[0][0]]
-#    temp_df,temp_img_0=parse_staves(img,init_filter_thresh,width_ratio)
-#    width_corrected=drop_by_perc_off_mean(temp_df.copy(),'width','percent_off_mean_width',width_thresh)
-#    #print(width_corrected)
-#    temp_df['delta_y']=width_corrected.center_y.diff().shift(-1).fillna(0)
-#    delta_y_index=drop_by_perc_off_mean(temp_df.copy(),'delta_y','percent_off_mean_delta_y',delta_y_thresh)
-#    print(temp_df['delta_y'].mean())
-#    #working_df=drop_value_below_threshold(temp_df.copy(),'delta_y',(temp_df['delta_y']+1))
-#    temp_df_0=temp_df.groupby(['delta_y']).size().reset_index(name='count')
-#    temp_df_0=temp_df_0.sort_values('delta_y',ascending=True)
-#    print(temp_df_0)
-#    temp_df=calc_perc_off_mean(temp_df,'delta_y','percent_off_mean_delta_y')
-#    temp_df_working=temp_df.copy()
+
     img_info,temp_img=find_score_bounds(img,bounds_thresh,bounds_size_ratio)
     width_ratio=width_ratio_std*img_info['width'][np.where(img_info['id']=='score_bounds')[0][0]]/img_info['width'][np.where(img_info['id']=='img_bounds')[0][0]]
     df,temp_img_0=parse_staves(img,init_filter_thresh,width_ratio)
     df=drop_by_perc_off_mean(df.copy(),'width','percent_off_mean_width',width_thresh)   
     df['delta_y']=df.center_y.diff().shift(-1).fillna(0)
     df=df.groupby(['delta_y']).size().reset_index(name='count')
-    df['over_mean']=df.loc[df['delta_y']>df['delta_y'].mean(),df['count']]
-    df['under_mean']=df.loc[df['delta']<df['delta_y'].mean(),df['count']]
-    #score={'staves_in_system':}
-    print(df)
-    
+    mean=df['delta_y'].mean()-df['delta_y'].mode()
+    df['over_mean']=df.loc[df['delta_y']<mean,['count']].sum(axis=1)
+    df['under_mean']=df.loc[df['delta_y']>mean,['count']].sum(axis=1)
+    systems=len(img_info.index[np.where(img_info['id']=='score_bounds')])
+    score={'staves_in_system':np.around(((df['over_mean'].sum(axis=0)-(systems-1))/systems)+1),'system_count':systems}
+    print(score)
     return temp_img_0
 
 
-img_2=find_stave_data('source/scores/img_7.png',init_filter_thresh=145,width_thresh=0.2,delta_y_thresh=0.2)
+img_2=find_stave_data('source/scores/img_9.png',init_filter_thresh=145,width_thresh=0.2,delta_y_thresh=0.2)
 
 cv2.imshow('img',img_2)
 cv2.waitKey(0)
