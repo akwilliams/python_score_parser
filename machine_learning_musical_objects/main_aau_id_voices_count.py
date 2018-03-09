@@ -143,13 +143,21 @@ def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thr
     df,temp_img_0=parse_staves(img,init_filter_thresh,width_ratio)
     df=drop_by_perc_off_mean(df.copy(),'width','percent_off_mean_width',width_thresh)   
     df['delta_y']=df.center_y.diff().shift(-1).fillna(0)
-    df=df.groupby(['delta_y']).size().reset_index(name='count')
-    mean=df['delta_y'].mean()-df['delta_y'].mode()
-    df['over_mean']=df.loc[df['delta_y']<mean,['count']].sum(axis=1)
-    df['under_mean']=df.loc[df['delta_y']>mean,['count']].sum(axis=1)
+    df_delta_y=df.groupby(['delta_y']).size().reset_index(name='count')
+    mean=df_delta_y['delta_y'].mean()-df_delta_y['delta_y'].mode()
+    df_delta_y['over_mean']=df_delta_y.loc[df_delta_y['delta_y']<mean,['count']].sum(axis=1)
+    df_delta_y['under_mean']=df_delta_y.loc[df_delta_y['delta_y']>mean,['count']].sum(axis=1)
     systems=len(img_info.index[np.where(img_info['id']=='score_bounds')])
-    score={'staves_in_system':np.around(((df['over_mean'].sum(axis=0)-(systems-1))/systems)+1),'system_count':systems}
-    print(score)
+    score={'staves_in_system':np.around(((df_delta_y['over_mean'].sum(axis=0)-(systems-1))/systems)+1),'system_count':systems}
+    #print(df['center_y'].min(),df['center_y'].min()-(4*df_delta_y['delta_y'][np.where(df_delta_y['count']==df_delta_y['count'].max())[0][0]]),df,df_delta_y)
+    find_index=df_delta_y.loc[df_delta_y['count'].idxmax()]['delta_y']*4
+    find_x_val=df.center_y[df.center_y==390].index.tolist()[0]
+    print(df['center_y'][find_x_val])
+    print(find_x_val)
+    print(find_index)
+    stave_0=[[df['center_x'][find_x_val]-(df['width'][find_x_val]/2),df['center_y'].min()],[df['center_x'][find_x_val]+(df['width'][find_x_val]/2),df['center_y'].min()-(4*df_delta_y['delta_y'][np.where(df_delta_y['count']==df_delta_y['count'].max())[0][0]])]]
+    print(stave_0)
+    #score_bounds={}
     return temp_img_0
 
 
