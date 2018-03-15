@@ -479,51 +479,51 @@ def find_clef_data(img,stave_data):
 
 
 
-score_data,img_2=find_stave_data('source/scores/img_13.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
-
-cv2.imshow('img',img_2)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-score_data['staves']=score_data['staves'].reset_index(drop=True)
-
-score_data['staves']['delta_upper_bounds']=score_data['staves'].upper_bounds.diff().shift(-1).fillna(0)
-score_data['staves']['delta_lower_bounds']=score_data['staves'].lower_bounds.diff().shift(-1).fillna(0)
-
-
-
-thing=score_data['staves']['lower_bounds'].subtract(score_data['staves']['upper_bounds'])
-height=int(thing if thing.mode()[0]%2==1 else thing.mode()[0]+1)
-print(height)
-bx,img=draw_boxes_by_params('source/scores/img_13.png',33,101,0,155,[height*(height*4/7),height*(height*3/2)],[-1,-1],True)
-
-cv2.imshow('img',img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-df_0,df_1=write_bndng_bx_pd_df([bx],'clef_pass')
-#df_1['height'],df_1['width']=df_1.max(axis=1),df_1.min(axis=1)
-df = pd.concat([df_0,df_1],axis=1)
-
-df_5=pd.DataFrame(data={'delta_y_upper':[],'delta_y_lower':[],'delta_x_lower':[],'index':[]})
-for index,row in df.iterrows():
-    df_5=df_5.append(pd.DataFrame(data={'index':index,'delta_y_lower':score_data['staves']['lower_bounds'].subtract([row['center_y']]*len(score_data['staves']['lower_bounds'].tolist())),'delta_y_upper':score_data['staves']['upper_bounds'].subtract([row['center_y']]*len(score_data['staves']['upper_bounds'].tolist())),'delta_x_lower':np.subtract([row['center_x']]*len(score_data['staves']['left_bounds'].tolist()),score_data['staves']['left_bounds']),'area':row['height']*row['width'],'ratio':row['width']/row['height'],'sum':score_data['staves']['lower_bounds'].subtract([row['center_y']]*len(score_data['staves']['lower_bounds'].tolist())).add(score_data['staves']['upper_bounds'].subtract([row['center_y']]*len(score_data['staves']['upper_bounds'].tolist())))}))
-
-df_5=df_5.loc[df_5['delta_y_lower']>0]
-df_5=df_5.loc[df_5['delta_y_upper']<0]
-df_5=df_5.reset_index()
-
-
-df_6=df_5.loc[df_5['level_0'].duplicated(keep=False)]
-df_7=df_5.append(df_6)
-df_7=df_7.drop_duplicates(keep=False)
-df_5=df_5.loc[df_5['level_0'].duplicated(keep=False)]
-
-
-for duplicate in df_6['level_0'].drop_duplicates().tolist():
-    df_7=df_7.append(df_5.loc[df_5.loc[df_5['level_0']==duplicate]['delta_x_lower'].idxmin()])
-
-print(df_7)
+#score_data,img_2=find_stave_data('source/scores/img_13.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
+#
+#cv2.imshow('img',img_2)
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
+#
+#score_data['staves']=score_data['staves'].reset_index(drop=True)
+#
+#score_data['staves']['delta_upper_bounds']=score_data['staves'].upper_bounds.diff().shift(-1).fillna(0)
+#score_data['staves']['delta_lower_bounds']=score_data['staves'].lower_bounds.diff().shift(-1).fillna(0)
+#
+#
+#
+#thing=score_data['staves']['lower_bounds'].subtract(score_data['staves']['upper_bounds'])
+#height=int(thing if thing.mode()[0]%2==1 else thing.mode()[0]+1)
+#print(height)
+#bx,img=draw_boxes_by_params('source/scores/img_13.png',33,101,0,155,[height*(height*4/7),height*(height*3/2)],[-1,-1],True)
+#
+#cv2.imshow('img',img)
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
+#
+#df_0,df_1=write_bndng_bx_pd_df([bx],'clef_pass')
+##df_1['height'],df_1['width']=df_1.max(axis=1),df_1.min(axis=1)
+#df = pd.concat([df_0,df_1],axis=1)
+#
+#df_5=pd.DataFrame(data={'delta_y_upper':[],'delta_y_lower':[],'delta_x_lower':[],'index':[]})
+#for index,row in df.iterrows():
+#    df_5=df_5.append(pd.DataFrame(data={'index':index,'delta_y_lower':score_data['staves']['lower_bounds'].subtract([row['center_y']]*len(score_data['staves']['lower_bounds'].tolist())),'delta_y_upper':score_data['staves']['upper_bounds'].subtract([row['center_y']]*len(score_data['staves']['upper_bounds'].tolist())),'delta_x_lower':np.subtract([row['center_x']]*len(score_data['staves']['left_bounds'].tolist()),score_data['staves']['left_bounds']),'area':row['height']*row['width'],'ratio':row['width']/row['height'],'sum':score_data['staves']['lower_bounds'].subtract([row['center_y']]*len(score_data['staves']['lower_bounds'].tolist())).add(score_data['staves']['upper_bounds'].subtract([row['center_y']]*len(score_data['staves']['upper_bounds'].tolist())))}))
+#
+#df_5=df_5.loc[df_5['delta_y_lower']>0]
+#df_5=df_5.loc[df_5['delta_y_upper']<0]
+#df_5=df_5.reset_index()
+#
+#
+#df_6=df_5.loc[df_5['level_0'].duplicated(keep=False)]
+#df_7=df_5.append(df_6)
+#df_7=df_7.drop_duplicates(keep=False)
+#df_5=df_5.loc[df_5['level_0'].duplicated(keep=False)]
+#
+#
+#for duplicate in df_6['level_0'].drop_duplicates().tolist():
+#    df_7=df_7.append(df_5.loc[df_5.loc[df_5['level_0']==duplicate]['delta_x_lower'].idxmin()])
+#
+#print(df_7)
 
 
 #
