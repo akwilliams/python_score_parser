@@ -112,7 +112,6 @@ def find_score_bounds(img,thresh=0.5,size_ratio=0.1):
     df_1['height'],df_1['width']=df_1.min(axis=1),df_1.max(axis=1)
     df_1['area']=df_1.apply(lambda row: row.height*row.width, axis=1)
     df=pd.concat([df,df_1],axis=1)
-    print(df)
     df=df.drop(df.index[np.where((df['area']/df['area'].max()<thresh))[0]])
     df=df.sort_values(by=['center_y'],ascending=True)
     df=df.append(temp_df)
@@ -146,7 +145,6 @@ def drop_value_below_threshold(df,ident,threshold):
 def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thresh=45,width_ratio_std=0.8,width_thresh=0.2,delta_y_thresh=0.4):
 
     img_info,temp_img=find_score_bounds(img,bounds_thresh,bounds_size_ratio)
-    print(img_info)
     width_ratio=width_ratio_std*img_info['width'][np.where(img_info['id']=='score_bounds')[0][0]]/img_info['width'][np.where(img_info['id']=='img_bounds')[0][0]]
     df,temp_img_0=parse_staves(img,init_filter_thresh,width_ratio)
     df=drop_by_perc_off_mean(df.copy(),'width','percent_off_mean_width',width_thresh) 
@@ -180,50 +178,49 @@ def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thr
     img_info['stave_count']=df_temp['numrow'].value_counts()
     score['staves_in_system']=img_info['stave_count'][:-1].tolist()
 
-    if(np.amax(score['staves_in_system'])!=np.amin(score['staves_in_system'])):
-        print('find groupings')
+    score['staves']=score['staves'].reset_index(drop=True)
+    score['staves']['delta_upper_bounds']=score['staves'].upper_bounds.diff().shift(-1).fillna(0)
+    score['staves']['delta_lower_bounds']=score['staves'].lower_bounds.diff().shift(-1).fillna(0)
 
+    hold=score['staves']['lower_bounds'].subtract(score['staves']['upper_bounds'])
+    height=int(hold.mode()[0] if hold.mode()[0]%2==1 else hold.mode()[0]+1)
+    divisor=score['staves']['upper_bounds'].diff().shift(1).mean()
+    bxs,score_img=draw_boxes_by_params(img,1,height,0,145,[height*9,height**3],[-1,-1],False)
+    df_4,df_5=write_bndng_bx_pd_df([bxs],'group_pass')
+    df_5['height'],df_5['width']=df_5.max(axis=1),df_5.min(axis=1)
+    df_6 = pd.concat([df_4,df_5],axis=1)
+    df_6['ratio']=df_6['height'].divide(df_6['width'])
+    df_6=df_6.loc[df_6['ratio']>35]
+    df_6['staves_in_group']=df_6['height'].divide(divisor).round(0)
+    df_6=df_6.loc[df_6['staves_in_group']<=np.amax(score['staves_in_system'])]
+    df_6=df_6.sort_values(by=['center_y'],ascending=True)
+    df_6=df_6.reset_index(drop=True)
+    df_6['delta_y']=df_6.center_y.diff().shift(-1).fillna(height+1)
+    df_6['numrow']=df_6.index.tolist()
+    df_7=df_6.loc[df_6['delta_y']>height]
+    df_7['delta']=df_7['numrow'].diff().shift(-1).fillna(df_7.loc[df_7['delta_y']>10]['numrow'].diff().shift(1))
+    container={'voice_count':[],'center_y':[]}
 
-    return score,temp_img
+    for index,row in df_7.iterrows():
+        if index-1 not in (df_7.index.tolist()+[-1]):
+            container['voice_count'].append(row['staves_in_group']+1)
+            container['center_y'].append(row['center_y'])
+
+        score['stave_groups']=pd.DataFrame(data=container)
+
+    return score,temp_img_0
 
 
 def find_clef_data(img,stave_data):
     return stave_data,img
 
-#
-#score_data,img_2=find_stave_data('source/scores/img_21.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
-#score_data['staves']=score_data['staves'].reset_index(drop=True)
-#
-#score_data['staves']['delta_upper_bounds']=score_data['staves'].upper_bounds.diff().shift(-1).fillna(0)
-#score_data['staves']['delta_lower_bounds']=score_data['staves'].lower_bounds.diff().shift(-1).fillna(0)
-#
-#
-#
-#thing=score_data['staves']['lower_bounds'].subtract(score_data['staves']['upper_bounds'])
-#height=int(thing.mode()[0] if thing.mode()[0]%2==1 else thing.mode()[0]+1)
-#hold,score_temp=draw_boxes_by_params('source/scores/img_21.png',1,height,0,145,[height*9,height**2],[-1,-1],True)
-#
-#cv2.imshow('img',score_temp)
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
-#
-#df_0,df_1=write_bndng_bx_pd_df([hold],'group_pass')
-#df_1['height'],df_1['width']=df_1.max(axis=1),df_1.min(axis=1)
-#df_2 = pd.concat([df_0,df_1],axis=1)
-#df_2['ratio']=df_2['height'].divide(df_2['width'])
-#df_2=df_2.loc[df_2['ratio']>15]
-#df_2['staves_in_group']=df_2['height'].divide(height*2).round(0)
-#'''
-#This is what I am working on, I can get the probable number of staves in instrument grouping
-#I now need to parse throught stave locations to fine the bounds of the instrument groups
-#for index,row in df_2.iterrows():
-#    
-#'''
-#hold,score_temp=draw_boxes_by_params(temp_img,1,1,300,245,[(height*width*size_ratio),(height*width)],[-1,-1],True)
-#
-#print(np.amax([3,3,4,3]),np.amin([3,3,4,3]))
 
-#bx,img=draw_boxes_by_params('source/scores/img_10.png',gBlur_x=11,gBlur_y=11,gBlur_std_dev=9,thresh=125,bx_area_thresh=[-1,-1],bx_angle_thresh=[-1,-1],draw_rects=False):
+score_data,img_2=find_stave_data('source/scores/img_20.png',init_filter_thresh=190,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_17.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_19.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_21.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_16.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
+
 
 
 #score_data,img_2=find_stave_data('source/scores/img_9.png',init_filter_thresh=190,width_thresh=0.2,delta_y_thresh=0.2)
