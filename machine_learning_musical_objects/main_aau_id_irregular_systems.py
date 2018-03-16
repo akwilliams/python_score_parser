@@ -141,15 +141,7 @@ def drop_value_below_threshold(df,ident,threshold):
     df[ident].abs()
     print(df[ident])
     df=df[df[ident]>threshold]
-    return df
-
-    '''
-    score_data,img_2=find_stave_data('source/scores/img_20.png',init_filter_thresh=190,width_thresh=0.2,delta_y_thresh=0.1252)
-    
-    cv2.imshow('img',img_2)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    '''
+    return df  
 
 def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thresh=45,width_ratio_std=0.8,width_thresh=0.2,delta_y_thresh=0.4):
 
@@ -164,48 +156,72 @@ def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thr
     mean=df_delta_y['delta_y'].mean()-df_delta_y['delta_y'].mode()
     df_delta_y['over_mean']=df_delta_y.loc[df_delta_y['delta_y']<mean,['count']].sum(axis=1)
     df_delta_y['under_mean']=df_delta_y.loc[df_delta_y['delta_y']>mean,['count']].sum(axis=1)
-    systems=len(img_info.index[np.where(img_info['id']=='score_bounds')])
-    score={'staves_in_system':np.around(((df_delta_y['over_mean'].sum(axis=0)-(systems-1))/systems)+1),'system_count':systems}
+    #systems=len(img_info.index[np.where(img_info['id']=='score_bounds')])
     df_2=df.sort_values(['delta_y'],ascending=True)
-    '''
-    This is a problem that I need to solve
-    '''
-    df_2=df_2[:int(score['staves_in_system']*score['system_count']-1)]
-    df_3=df.loc[np.add(df_2.index.tolist(),[1]*int(score['staves_in_system']*score['system_count']-1))]
+    score={'total_staves':int(len(df_2.loc[df_2['delta_y']<(1.3*df_2['delta_y'].mode()[0])])+1),'system_count':len(img_info.index[np.where(img_info['id']=='score_bounds')])}
+    df_2=df_2[:(score['total_staves']-1)]
+    df_3=df.loc[np.add(df_2.index.tolist(),([1]*(score['total_staves']-1)))]
     df_2,df_3=df_2.append(df.loc[df['center_y'].idxmin()]),df_3.append(df.loc[[0]])
     df_3,df_2=df_3.sort_values(['center_y'],ascending=True),df_2.sort_values(['center_y'],ascending=True)
-    print(df_3,df_2)
     df_3,df_2=df_3.loc[np.mod(df_3.index.tolist(),[5]*len(df_3.index.tolist()))==0],df_2.loc[np.mod(np.add(df_2.index.tolist(),[1]*len(df_2.index.tolist())),[5]*len(df_2.index.tolist()))==0]
     score['staves']=pd.DataFrame(data={'upper_bounds':df_2['center_y'].tolist(),'lower_bounds':df_3['center_y'].tolist(),'left_bounds':df_3['center_x'].subtract(df_3['width'].divide([2]*len(df_3['width'].tolist()))),'right_bounds':df_3['center_x'].add(df_3['width'].divide([2]*len(df_3['width'].tolist())))})
-    #if len(score['staves'].index.tolist()) != (score['staves_in_system']*score['system_count']):
-    temp=calc_irregular_stave_locations(score,img_info)
-    print(temp['stave_count'])
-    score['staves_in_system']=temp['stave_count'][:-1].tolist()
-    print(temp['stave_count'])
-    return score,temp_img_0
-
-def calc_irregular_stave_locations(score_info,img_info):
     
     img_info['upper_bounds']=img_info['center_y'].subtract(img_info['height'].divide([2]*len(img_info.index.tolist())))
     img_info['lower_bounds']=img_info['center_y'].add(img_info['height'].divide([2]*len(img_info.index.tolist())))
-    print(score_info['staves'])
     df_temp=pd.DataFrame(data={'delta_y_upper':[],'delta_y_lower':[],'index':[]})
-    for index,row in score_info['staves'].iterrows():
-        print(index)
+
+    for index,row in score['staves'].iterrows():
+        #print(index)
         df_temp=df_temp.append(pd.DataFrame(data={'index':index,'delta_y_upper':img_info.loc[img_info['id']=='score_bounds']['upper_bounds'].subtract([row['upper_bounds']]*len(img_info.loc[img_info['id']=='score_bounds'].index.tolist())),'delta_y_lower':img_info.loc[img_info['id']=='score_bounds']['lower_bounds'].subtract([row['lower_bounds']]*len(img_info.loc[img_info['id']=='score_bounds'].index.tolist()))}))
 
-    print(df_temp)
     df_temp=df_temp.loc[df_temp['delta_y_lower']>0]
     df_temp=df_temp.loc[df_temp['delta_y_upper']<0]
     df_temp['numrow']=df_temp.index.tolist()
-    print(df_temp)
     img_info['stave_count']=df_temp['numrow'].value_counts()
+    score['staves_in_system']=img_info['stave_count'][:-1].tolist()
 
-    return img_info
+    if(np.amax(score['staves_in_system'])!=np.amin(score['staves_in_system'])):
+        print('find groupings')
+
+
+    return score,temp_img
+
 
 def find_clef_data(img,stave_data):
     return stave_data,img
 
+
+score_data,img_2=find_stave_data('source/scores/img_21.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data['staves']=score_data['staves'].reset_index(drop=True)
+
+score_data['staves']['delta_upper_bounds']=score_data['staves'].upper_bounds.diff().shift(-1).fillna(0)
+score_data['staves']['delta_lower_bounds']=score_data['staves'].lower_bounds.diff().shift(-1).fillna(0)
+
+
+
+thing=score_data['staves']['lower_bounds'].subtract(score_data['staves']['upper_bounds'])
+height=int(thing.mode()[0] if thing.mode()[0]%2==1 else thing.mode()[0]+1)
+hold,score_temp=draw_boxes_by_params('source/scores/img_21.png',1,height,0,145,[height*9,height**2],[-1,-1],True)
+
+cv2.imshow('img',score_temp)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+df_0,df_1=write_bndng_bx_pd_df([hold],'group_pass')
+df_1['height'],df_1['width']=df_1.max(axis=1),df_1.min(axis=1)
+df_2 = pd.concat([df_0,df_1],axis=1)
+df_2['ratio']=df_2['height'].divide(df_2['width'])
+df_2=df_2.loc[df_2['ratio']>15]
+df_2['staves_in_group']=df_2['height'].divide(height*2).round(0)
+'''
+This is what I am working on, I can get the probable number of staves in instrument grouping
+I now need to parse throught stave locations to fine the bounds of the instrument groups
+for index,row in df_2.iterrows():
+    
+'''
+hold,score_temp=draw_boxes_by_params(temp_img,1,1,300,245,[(height*width*size_ratio),(height*width)],[-1,-1],True)
+
+print(np.amax([3,3,4,3]),np.amin([3,3,4,3]))
 
 #bx,img=draw_boxes_by_params('source/scores/img_10.png',gBlur_x=11,gBlur_y=11,gBlur_std_dev=9,thresh=125,bx_area_thresh=[-1,-1],bx_angle_thresh=[-1,-1],draw_rects=False):
 
@@ -708,7 +724,7 @@ for index in range(int(score_data['staves_in_system'])):
 
 
 
-score_data,img_2=find_stave_data('source/scores/img_16.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_21.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
 
 cv2.imshow('img',img_2)
 cv2.waitKey(0)
