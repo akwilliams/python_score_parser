@@ -214,13 +214,13 @@ def find_stave_data(img,bounds_thresh=0.5,bounds_size_ratio=0.01,init_filter_thr
 def find_clef_data(img,stave_data):
     return stave_data,img
 
-#
-#score_data,img_2=find_stave_data('source/scores/img_20.png',init_filter_thresh=190,width_thresh=0.12,delta_y_thresh=0.1252)
-#score_data,img_2=find_stave_data('source/scores/img_17.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
-#score_data,img_2=find_stave_data('source/scores/img_19.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
-#score_data,img_2=find_stave_data('source/scores/img_21.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
-#score_data,img_2=find_stave_data('source/scores/img_16.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
-#
+
+score_data,img_2=find_stave_data('source/scores/img_20.png',init_filter_thresh=190,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_17.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_19.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_21.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
+score_data,img_2=find_stave_data('source/scores/img_16.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
+
 
 
 #score_data,img_2=find_stave_data('source/scores/img_9.png',init_filter_thresh=190,width_thresh=0.2,delta_y_thresh=0.2)
@@ -719,64 +719,93 @@ def find_clef_data(img,stave_data):
 #
 #
 #
-#
-#
-#score_data,img_2=find_stave_data('source/scores/img_21.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
-#
-#cv2.imshow('img',img_2)
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
-#
-#score_data['staves']=score_data['staves'].reset_index(drop=True)
-#
-#score_data['staves']['delta_upper_bounds']=score_data['staves'].upper_bounds.diff().shift(-1).fillna(0)
-#score_data['staves']['delta_lower_bounds']=score_data['staves'].lower_bounds.diff().shift(-1).fillna(0)
-#
-#
-#
-#thing=score_data['staves']['lower_bounds'].subtract(score_data['staves']['upper_bounds'])
-#height=int(thing.mode()[0] if thing.mode()[0]%2==1 else thing.mode()[0]+1)
-#bx,img=draw_boxes_by_params('source/scores/img_16.png',15,73,0,155,[height*(height*2/7),height*(height*3/2)],[-1,-1],True)
-#
-#cv2.imshow('img',img)
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
-#
-#df_0,df_1=write_bndng_bx_pd_df([bx],'clef_pass')
-#df_1['height'],df_1['width']=df_1.min(axis=1),df_1.max(axis=1)
-#df_2 = pd.concat([df_0,df_1],axis=1)
-#
-#df_3=pd.DataFrame(data={'delta_y_upper':[],'delta_y_lower':[],'delta_x_lower':[],'index':[]})
-#for index,row in df_2.iterrows():
-#    df_3=df_3.append(pd.DataFrame(data={'index':index,'angle':np.abs(row['angle']),'delta_y_lower':score_data['staves']['lower_bounds'].subtract([row['center_y']]*len(score_data['staves']['lower_bounds'].tolist())),'delta_y_upper':score_data['staves']['upper_bounds'].subtract([row['center_y']]*len(score_data['staves']['upper_bounds'].tolist())),'delta_x_lower':np.subtract([row['center_x']]*len(score_data['staves']['left_bounds'].tolist()),score_data['staves']['left_bounds']),'area':row['height']*row['width'],'ratio':row['width']/row['height'],'sum':score_data['staves']['lower_bounds'].subtract([row['center_y']]*len(score_data['staves']['lower_bounds'].tolist())).add(score_data['staves']['upper_bounds'].subtract([row['center_y']]*len(score_data['staves']['upper_bounds'].tolist())))}))
-#
-#df_3=df_3.loc[df_3['delta_y_lower']>0]
-#df_3=df_3.loc[df_3['delta_y_upper']<0]
-#df_3=df_3.loc[df_3['ratio']<10]
-#
-#df=df_3.copy().sort_values(by=['delta_x_lower'])
-#df['rownum']=df.index.tolist()
-#
-#df=df.drop_duplicates(subset='rownum',keep='first')
-#
-#stave_data = []
-#
-#
-#for index in range(int(score_data['staves_in_system'])):
-#    #stave_data.append(df.loc[df['rownum']%score_data['system_count']==index].copy())
-#    temp=df.loc[df['rownum']%int(score_data['staves_in_system'])==index].copy()
-#    #temp=calc_perc_off_mean(temp.copy(),'delta_x_lower','perc_off_mean_delta_x')
-#    temp=calc_perc_off_mean(temp.copy(),'area','perc_off_mean_area')
-#    temp=calc_perc_off_mean(temp.copy(),'ratio','perc_off_mean_ratio')
-#    temp=calc_perc_off_mean(temp.copy(),'angle','perc_off_mean_angle')
-#    
-#    stave_data.append(temp.copy())
-#    del temp
-#
-#
-#print(np.mod(stave_data[0].index.tolist(),[5]*len(stave_data[0].index.tolist())))
-#print(stave_data[0].loc[np.mod(stave_data[0].index.tolist(),[5]*len(stave_data[0].index.tolist()))==0])
-#
+
+
+score_data,img_2=find_stave_data('source/scores/img_21.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
+
+cv2.imshow('img',img_2)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+
+
+thing=score_data['staves']['lower_bounds'].subtract(score_data['staves']['upper_bounds'])
+height=int(thing.mode()[0] if thing.mode()[0]%2==1 else thing.mode()[0]+1)
+bx,img=draw_boxes_by_params('source/scores/img_20.png',15,73,0,135,[height*(height*2/7),height*(height*3/2)],[-1,-1],True)
+
+cv2.imshow('img',img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+df_0,df_1=write_bndng_bx_pd_df([bx],'clef_pass_g_c')
+df_1['height'],df_1['width']=df_1.min(axis=1),df_1.max(axis=1)
+df_2 = pd.concat([df_0,df_1],axis=1)
+
+df_3=pd.DataFrame(data={'delta_y_upper':[],'delta_y_lower':[],'delta_x_lower':[],'index':[]})
+for index,row in df_2.iterrows():
+    df_3=df_3.append(pd.DataFrame(data={'index':index,'angle':np.abs(row['angle']),'delta_y_lower':score_data['staves']['lower_bounds'].subtract([row['center_y']]*len(score_data['staves']['lower_bounds'].tolist())),'delta_y_upper':score_data['staves']['upper_bounds'].subtract([row['center_y']]*len(score_data['staves']['upper_bounds'].tolist())),'delta_x_lower':np.subtract([row['center_x']]*len(score_data['staves']['left_bounds'].tolist()),score_data['staves']['left_bounds']),'area':row['height']*row['width'],'ratio':row['width']/row['height'],'sum':score_data['staves']['lower_bounds'].subtract([row['center_y']]*len(score_data['staves']['lower_bounds'].tolist())).add(score_data['staves']['upper_bounds'].subtract([row['center_y']]*len(score_data['staves']['upper_bounds'].tolist())))}))
+
+df_3=df_3.loc[df_3['delta_y_lower']>0]
+df_3=df_3.loc[df_3['delta_y_upper']<0]
+df_3=df_3.loc[df_3['ratio']<10]
+df_3['numrow']=df_3.index.tolist()
+df_3=df_3.sort_values(by=['delta_x_lower'],ascending=True)
+df_3=df_3.drop_duplicates(subset='numrow',keep='first')
+df_3['delta_x_delta']=df_3['delta_x_lower'].diff().shift(-1).fillna(df_3['delta_x_lower'].diff().shift())
+#print(df_3.loc[df_3['delta_x_lower']<=df_3['delta_x_lower'][((df_3.loc[df_3['delta_x_delta']>10].index.tolist()[0]))])
+df_3=df_3.loc[df_3['delta_x_lower']<=df_3['delta_x_lower'][((df_3.loc[df_3['delta_x_delta']>10].index.tolist()[0]))]]
+#df_3=df_3.iloc[:(1+(df_3.loc[df_3['delta_x_delta']>10].index.tolist()[0])) :]
+df_3=df_3.sort_values(by=['area'],ascending=True)
+df_3['delta_area']=df_3['area'].diff().shift(-1).fillna(df_3['area'].diff().shift(1))
+df_3['perc_delta_of_area']=df_3['delta_area'].divide(df_3['area'])
+#df_4,df_5=df_3.iloc[:1+(df_3.loc[df_3['perc_delta_of_area']>0.1].index.tolist()[0])]['numrow'].tolist(),df_3.iloc[1+(df_3.loc[df_3['perc_delta_of_area']>0.1].index.tolist()[0]):]['numrow'].tolist()
+df_3=df_3.reset_index(drop=True)
+print(df_3.iloc[:1+(df_3.loc[df_3['perc_delta_of_area']>0.1].index.tolist()[0])]['numrow'].tolist())
+clef_id={'g_clef':df_3.iloc[1+(df_3.loc[df_3['perc_delta_of_area']>0.1].index.tolist()[-1]):]['numrow'].tolist(),'c_clef':df_3.iloc[:1+(df_3.loc[df_3['perc_delta_of_area']>0.1].index.tolist()[-1])]['numrow'].tolist(),'f_clef':list(set(range(score_data['total_staves']))-set(df_3['numrow'].tolist()))}
+clef_id['f_clef']=list(set(range(score_data['stave_count']))-set(df_3.index.tolist()))
+#celf_id={'g_clef':df_3.loc[df_3['perc_delta_of_area']<0.1].index.tolist(),'c_clef':df_3.loc[df_3['perc_delta_of_area']>0.1].index.tolist(),'f_clef':list(set(range(score_data['total_staves']))-set(df_3.index.tolist()))}
+print((set(range(14))-set(df_3.index.tolist())))
+
+
+
+
+print(len(df_3.loc[df_3['delta_x_delta']>10].index.tolist()[1:]))
+print(df_3.iloc[:(-1*len(df_3.loc[df_3['delta_x_delta']>10].index.tolist()[1:])) :])
+
+
+
+
+I need to filter by index
+'''
+
+
+
+
+
+df=df_3.copy().sort_values(by=['delta_x_lower'])
+df['rownum']=df.index.tolist()
+
+df=df.drop_duplicates(subset='rownum',keep='first')
+
+stave_data = []
+
+
+for index in range(int(score_data['staves_in_system'])):
+    #stave_data.append(df.loc[df['rownum']%score_data['system_count']==index].copy())
+    temp=df.loc[df['rownum']%int(score_data['staves_in_system'])==index].copy()
+    #temp=calc_perc_off_mean(temp.copy(),'delta_x_lower','perc_off_mean_delta_x')
+    temp=calc_perc_off_mean(temp.copy(),'area','perc_off_mean_area')
+    temp=calc_perc_off_mean(temp.copy(),'ratio','perc_off_mean_ratio')
+    temp=calc_perc_off_mean(temp.copy(),'angle','perc_off_mean_angle')
+    
+    stave_data.append(temp.copy())
+    del temp
+
+
+print(np.mod(stave_data[0].index.tolist(),[5]*len(stave_data[0].index.tolist())))
+print(stave_data[0].loc[np.mod(stave_data[0].index.tolist(),[5]*len(stave_data[0].index.tolist()))==0])
+
 ##
 ##cv2.imshow('img',img_2)
 ##cv2.waitKey(0)
