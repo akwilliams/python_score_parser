@@ -262,7 +262,7 @@ def find_g_clefs(img,stave_data,x_blur=15,y_blur=73,init_filter=155,exclude_stav
     return clef_data
 
 
-
+'''
 score_data,img_2=find_stave_data('source/scores/img_6.png',init_filter_thresh=180,width_thresh=0.12,delta_y_thresh=0.12)
 
 cv2.imshow('img',img_2)
@@ -273,13 +273,17 @@ score_data,img_2=find_stave_data('source/scores/img_8.png',init_filter_thresh=14
 
 score_data,img_2=find_stave_data('source/scores/img_9.png',init_filter_thresh=170,width_thresh=0.2,delta_y_thresh=0.2)
 '''
+'''
 score_data,img_2=find_stave_data('source/scores/img_10.png',init_filter_thresh=135,width_thresh=0.082,delta_y_thresh=0.2)
+'''
 '''
 score_data,img_2=find_stave_data('source/scores/img_11.png',init_filter_thresh=155,width_thresh=0.2,delta_y_thresh=0.2)
 
 score_data,img_2=find_stave_data('source/scores/img_12.png',init_filter_thresh=125,width_thresh=0.2,delta_y_thresh=0.2)
 '''
+'''
 score_data,img_2=find_stave_data('source/scores/img_13.png',init_filter_thresh=205,width_thresh=0.12,delta_y_thresh=0.252)
+'''
 '''
 score_data,img_2=find_stave_data('source/scores/img_14.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_14.png',score_data,9,43,125)
@@ -303,7 +307,9 @@ clef_data=find_g_clefs('source/scores/img_21.png',score_data,15,73,135)
 score_data,img_2=find_stave_data('source/scores/img_22.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_22.png',score_data,15,73,155)
 '''
+'''
 score_data,img_2=find_stave_data('source/scores/img_23.png',init_filter_thresh=190,width_thresh=0.12,delta_y_thresh=0.1252)
+'''
 '''
 score_data,img_2=find_stave_data('source/scores/img_24.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_24.png',score_data,15,73,155)
@@ -342,10 +348,13 @@ clef_data=find_g_clefs('source/scores/img_34.png',score_data,15,73,155)
 score_data,img_2=find_stave_data('source/scores/img_35.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_35.png',score_data,15,73,155)
 '''
+'''
 score_data,img_2=find_stave_data('source/scores/img_36.png',init_filter_thresh=125,width_thresh=0.1,delta_y_thresh=0.1)
 clef_data=find_g_clefs('source/scores/img_36.png',score_data,11,73,175)
 '''
+'''
 score_data,img_2=find_stave_data('source/scores/img_37.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
+'''
 '''
 clef_data=find_g_clefs('source/scores/img_37.png',score_data,21,73,185)
 '''
@@ -353,14 +362,17 @@ clef_data=find_g_clefs('source/scores/img_37.png',score_data,21,73,185)
 score_data,img_2=find_stave_data('source/scores/img_38.png',init_filter_thresh=165,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_38.png',score_data,15,73,105)
 '''
+'''
 score_data,img_2=find_stave_data('source/scores/img_39.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_39.png',score_data,15,73,165)
 
 score_data,img_2=find_stave_data('source/scores/img_40.png',init_filter_thresh=165,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_40.png',score_data,15,73,175)
 '''
+'''
 score_data,img_2=find_stave_data('source/scores/img_41.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_41.png',score_data,21,73,135)
+'''
 '''
 score_data,img_2=find_stave_data('source/scores/img_42.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_42.png',score_data,21,73,175)
@@ -371,15 +383,19 @@ clef_data=find_g_clefs('source/scores/img_43.png',score_data,21,73,175)
 score_data,img_2=find_stave_data('source/scores/img_44.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_44.png',score_data,15,73,195)
 '''
+'''
 score_data,img_2=find_stave_data('source/scores/img_45.png',init_filter_thresh=155,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_45.png',score_data,21,73,165)
+'''
 '''
 score_data,img_2=find_stave_data('source/scores/img_46.png',init_filter_thresh=165,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_46.png',score_data,15,73,178)
 
 score_data,img_2=find_stave_data('source/scores/img_47.png',init_filter_thresh=185,width_thresh=0.12,delta_y_thresh=0.1252)
 '''
+'''
 clef_data=find_g_clefs('source/scores/img_47.png',score_data,15,73,185)
+'''
 '''
 score_data,img_2=find_stave_data('source/scores/img_48.png',init_filter_thresh=145,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_48.png',score_data,15,73,175)
@@ -387,12 +403,16 @@ clef_data=find_g_clefs('source/scores/img_48.png',score_data,15,73,175)
 score_data,img_2=find_stave_data('source/scores/img_49.png',init_filter_thresh=175,width_thresh=0.12,delta_y_thresh=0.1252)
 clef_data=find_g_clefs('source/scores/img_49.png',score_data,15,73,165)
 '''
+'''
 clef_data=clef_data+find_g_clefs('source/scores/img_49.png',score_data,21,73,180,exclude_staves=clef_data)
+'''
 '''
 score_data,img_2=find_stave_data('source/scores/img_50.png',init_filter_thresh=165,width_thresh=0.12,delta_y_thresh=0.1252)
 '''
+'''
 clef_data=find_g_clefs('source/scores/img_50.png',score_data,11,73,95)
 '''
+
 
 
 
