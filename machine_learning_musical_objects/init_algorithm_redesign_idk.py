@@ -260,7 +260,152 @@ def find_g_clefs(img,stave_data,x_blur=15,y_blur=73,init_filter=155,exclude_stav
     clef_data=df_3['numrow'].tolist()
     
     return clef_data
-#
+
+
+
+def write_bndng_bx_to_df(calc_pass):
+    lib={'vec_0_x':[],'vec_0_y':[],'vec_1_x':[],'vec_1_y':[],'vec_c_x':[],'vec_c_y':[],'length':[],'width':[],'angle':[],'area':[],'pixel_mean':[],'x_blur':[],'y_blur':[],'threshold':[],'identity':[]}
+    for instance in calc_pass:
+        for box in instance:
+            rect=cv2.minAreaRect(box[1])
+            lib['vec_0_x'].append()
+            lib['vec_0_y'].append()
+            lib['vec_1_x'].append()
+            lib['vec_1_y'].append()
+            lib['vec_c_x'].append(int(rect[0][0]))
+            lib['vec_c_y'].append(int(rect[0][1]))
+            lib['length'].append(int(rect[1][0]))
+            lib['width'].append(int(rect[1][1]))
+            lib['angle'].append(box[0])
+            lib['area'].append((int(rect[1][0])*int(rect[1][1])))
+            lib['pixel_mean'].append()
+            lib['x_blur'].append()
+            lib['y_blur'].append()
+            lib['threshold'].append()
+            lib['identity'].append('unknown')
+    df=pd.DataFrame(data=lib)
+    
+    
+    
+    
+    temp_lib_0={'id':[],'angle':[],'center_x':[],'center_y':[]}
+    temp_lib_1={'height':[],'width':[]}
+    for instance in calc_pass:
+        for box in instance:
+            rect=cv2.minAreaRect(box[1])
+            temp_lib_0['id'].append(identity)
+            temp_lib_0['angle'].append(box[0])
+            temp_lib_1['width'].append(int(rect[1][1]))
+            temp_lib_1['height'].append(int(rect[1][0]))
+            temp_lib_0['center_x'].append(int(rect[0][0]))
+            temp_lib_0['center_y'].append(int(rect[0][1]))
+    temp_df_0=pd.DataFrame(data=temp_lib_0)
+    temp_df_1=pd.DataFrame(data=temp_lib_1)
+    return temp_df_0,temp_df_1
+
+
+
+
+def get_contures_by_params(img,gBlur_x=11,gBlur_y=11,gBlur_std_dev_x=0,gBlur_std_dev_y=0,thresh=125,bx_area_thresh=[-1,-1],bx_angle_thresh=[-1,-1],draw_rects=False):
+    if isinstance(img,str):
+        temp=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
+    else:
+        temp=img
+    temp_blr=cv2.GaussianBlur(temp,(gBlur_x,gBlur_y),(gBlur_std_dev_x,gBlur_std_dev_y))
+    th,temp_th=cv2.threshold(temp_blr,thresh,255,cv2.THRESH_BINARY_INV)
+    temp2,contours,hierarchy=cv2.findContours(temp_th,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    used_bx=[]      
+    for c in contours:
+        area=cv2.contourArea(c)
+        if area >= bx_area_thresh[0] and area <= bx_area_thresh[1] or bx_area_thresh[0]<=-1 or bx_area_thresh[1]<=-1:
+            rect=cv2.minAreaRect(c)
+            angle=(-1*rect[2]) if rect[1][0]>rect[1][1] else (-1*rect[2]-90)
+            angle=angle if angle>=0 else angle+360
+            angle=np.radians(angle)/np.pi if np.radians(angle)/np.pi<=0.5 else np.radians(angle)/np.pi-2
+            if angle >= bx_angle_thresh[0] and angle <= bx_angle_thresh[1] or bx_angle_thresh[0]<-0.5 or bx_angle_thresh[1]>0.5:
+                used_bx.append([])
+                used_bx[len(used_bx)-1].append(angle)
+                used_bx[len(used_bx)-1].append(c)
+                if draw_rects == True:
+                    box=cv2.boxPoints(rect)
+                    box=np.int0(box)
+                    cv2.drawContours(temp_th,[box],0,(150,150,150),2)
+                
+    return used_bx,temp_th
+
+img=cv2.imread('source/scores/img_20.png',cv2.IMREAD_GRAYSCALE)
+img=cv2.GaussianBlur(img,(1,35),0)
+th,img=cv2.threshold(img,165,255,cv2.THRESH_BINARY_INV)
+
+test=cv2.imread('source/g_clef/img_1.png',cv2.IMREAD_GRAYSCALE)
+test=cv2.GaussianBlur(test,(1,75),0)
+th,test=cv2.threshold(test,165,255,cv2.THRESH_BINARY_INV)
+#test=cv2.Canny(test,100,200)
+temp0,test_contours,hierarchy=cv2.findContours(test,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+for index in range(len(test_contours)):
+    x,y,w,h=cv2.boundingRect(test_contours[index])
+    print(w*h)
+    if(w*h>12000):
+        print(index)
+        test=cv2.rectangle(test,(x,y),(x+w,y+h),(155,155,155),2)
+
+
+cv2.imshow('img',test)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+canny=cv2.Canny(img,150,35)
+
+cv2.imshow('img',canny)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+print(len(contours))
+
+things=[]
+
+
+temp2,contours,hierarchy=cv2.findContours(canny,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+for index in range(len(contours)):
+    x,y,w,h = cv2.boundingRect(contours[index])
+#    val=cv2.matchShapes(contours[703],contours[index],1,0.0)
+#    if val<2 and (w*h)>300:
+#        print(index,val)
+    if(w*h)>2000 and (w*h)<=5000:  
+        things.append(contours[index])
+        img = cv2.rectangle(canny,(x,y),(x+w,y+h),(155,155,155),2)
+    #box=cv2.boxPoints(cv2.boundingRect(c))
+    #box=np.int0(box)
+    #cv2.drawContours(canny,[box],0,(150,150,150),2)
+#tester=contours[1654]
+cv2.imshow('img',canny)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+lib={'c0':[],'c1':[],'val':[]}
+
+for index_0 in range(len(things)):
+    for index_1 in range(len(things)-1-index_0):
+        if index_0!=index_1+index_0:
+            value=cv2.matchShapes(things[index_0],things[index_1],1,0.0)
+            
+            lib['c0'].append(index_0)
+            lib['c1'].append(index_1+index_0)
+            lib['val'].append(cv2.matchShapes(things[index_0],things[index_1],1,0.0))
+
+df=pd.DataFrame(data=lib)
+df=df.sort_values(by=['val'],ascending=True)
+df=df.drop_duplicates(subset='c0',keep='first')
+
+x,y,w,h = cv2.boundingRect(things[35])
+img = cv2.rectangle(canny,(x,y),(x+w,y+h),(155,155,155),2)
+x,y,w,h = cv2.boundingRect(things[96])
+img = cv2.rectangle(canny,(x,y),(x+w,y+h),(155,155,155),2)
+cv2.imshow('img',canny)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
 #def find_clef(img,stave_data,x_blur=15,y_blur=73,init_filter=155,exclude_staves=[],kind='g_clef',return_img=False,parameters={'use_preset':True}):
 #    
 #    #Lines 266-280 find objects via filter and filter all but the first on the stave
@@ -354,12 +499,12 @@ def find_g_clefs(img,stave_data,x_blur=15,y_blur=73,init_filter=155,exclude_stav
 #
 #height_calc=score_data['staves']['lower_bounds'].subtract(score_data['staves']['upper_bounds'])
 #height=int(height_calc.mode()[0] if height_calc.mode()[0]%2==1 else height_calc.mode()[0]+1)
-#bx,img=draw_boxes_by_params('source/scores/img_20.png',1,1,0,125,[height*(height/3),height*(height*7/4)],[-1,-1],True)
-#'''
+#bx,img=draw_boxes_by_params('source/scores/img_20.png',1,15,0,25,[0,5000],[-1,-1],True)
+#
 #cv2.imshow('img',img)
 #cv2.waitKey(0)
 #cv2.destroyAllWindows()
-#'''
+#
 #df_0,df_1=write_bndng_bx_pd_df([bx],'clef_pass_g_c')
 #df_1['height'],df_1['width']=df_1.min(axis=1),df_1.max(axis=1)
 #df_2 = pd.concat([df_0,df_1],axis=1)

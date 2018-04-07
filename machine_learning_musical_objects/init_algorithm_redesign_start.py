@@ -260,7 +260,7 @@ def find_g_clefs(img,stave_data,x_blur=15,y_blur=73,init_filter=155,exclude_stav
     clef_data=df_3['numrow'].tolist()
     
     return clef_data
-#
+
 #def find_clef(img,stave_data,x_blur=15,y_blur=73,init_filter=155,exclude_staves=[],kind='g_clef',return_img=False,parameters={'use_preset':True}):
 #    
 #    #Lines 266-280 find objects via filter and filter all but the first on the stave
@@ -354,12 +354,12 @@ def find_g_clefs(img,stave_data,x_blur=15,y_blur=73,init_filter=155,exclude_stav
 #
 #height_calc=score_data['staves']['lower_bounds'].subtract(score_data['staves']['upper_bounds'])
 #height=int(height_calc.mode()[0] if height_calc.mode()[0]%2==1 else height_calc.mode()[0]+1)
-#bx,img=draw_boxes_by_params('source/scores/img_20.png',1,1,0,125,[height*(height/3),height*(height*7/4)],[-1,-1],True)
-#'''
+#bx,img=draw_boxes_by_params('source/scores/img_20.png',1,15,0,25,[0,5000],[-1,-1],True)
+#
 #cv2.imshow('img',img)
 #cv2.waitKey(0)
 #cv2.destroyAllWindows()
-#'''
+#
 #df_0,df_1=write_bndng_bx_pd_df([bx],'clef_pass_g_c')
 #df_1['height'],df_1['width']=df_1.min(axis=1),df_1.max(axis=1)
 #df_2 = pd.concat([df_0,df_1],axis=1)
