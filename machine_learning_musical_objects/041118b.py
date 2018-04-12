@@ -7,72 +7,52 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
-img=cv2.imread('source/scores/img_20.png',cv2.IMREAD_GRAYSCALE)
+img=cv2.imread('source/scores/img_21.png',cv2.IMREAD_GRAYSCALE)
 height,width=img.shape[:2]
-filter_arg=int(width*0.5)
+filter_arg=int(width*0.75)
 filter_arg=filter_arg if filter_arg%2==1 else filter_arg+1
 img_filtered=cv2.GaussianBlur(img,(filter_arg,1),0)
 th, img_threshold=cv2.threshold(img_filtered,145,255,cv2.THRESH_BINARY_INV)
 
-img_open=cv2.morphologyEx(img_threshold,cv2.MORPH_OPEN,np.ones((1,1111),np.uint8))
+img_open=cv2.morphologyEx(img_threshold,cv2.MORPH_OPEN,np.ones((1,75),np.uint8))
 img_close=cv2.morphologyEx(img_open,cv2.MORPH_CLOSE,np.ones((5,1),np.uint8))
-img_closed_blr=cv2.GaussianBlur(img_close,(5,5),0)
-img_closed_thresh=cv2.threshold(img_closed_blr,60,255,cv2.THRESH_BINARY)[1]
+img_closed_blr=cv2.GaussianBlur(img_close,(3,3),0)
+img_closed_thresh=cv2.threshold(img_closed_blr,165,255,cv2.THRESH_BINARY)[1]
 
-cv2.imshow('img',img_closed_thresh)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+img_y_filter=cv2.GaussianBlur(img,(1,55),0)
+th,img_y_thresh=cv2.threshold(img_y_filter,150,255,cv2.THRESH_BINARY_INV)
+img_y_open=cv2.morphologyEx(img_y_thresh,cv2.MORPH_OPEN,np.ones((5,5),np.uint8))
+img_y_close=cv2.morphologyEx(img_y_open,cv2.MORPH_CLOSE,np.ones((2,2),np.uint8))
 
-img_y_filter=cv2.GaussianBlur(img,(1,255),0)
-th,img_y_thresh=cv2.threshold(img_y_filter,135,255,cv2.THRESH_BINARY_INV)
 
-cv2.imshow('img',img_y_thresh)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+modded=cv2.subtract(img_closed_thresh,img_y_close)
 
-modded=cv2.subtract(img_closed_thresh,img_y_thresh)
-
-cv2.imshow('modded',modded)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-        
 th,img_threshold_1=cv2.threshold(img,155,255,cv2.THRESH_BINARY_INV)
 hold_0,contours_0,hierarchy=cv2.findContours(img_threshold_1,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-blackhat=cv2.subtract(img_threshold_1,img_closed_thresh)
+blackhat=cv2.subtract(img_threshold_1,modded)
 
 cv2.imshow('blackhat',blackhat)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-#
-#blackhat_blr=cv2.GaussianBlur(blackhat,(3,3),0)
-#th,blackhat_thresh=cv2.threshold(blackhat_blr,95,255,cv2.THRESH_BINARY)
-#
-#cv2.imshow('blackhat_blr',blackhat_blr)
-#cv2.imshow('blackhat_thresh',blackhat_thresh)
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
-#
-#bh_open = [cv2.morphologyEx(blackhat_thresh,cv2.MORPH_OPEN,np.ones((2,2),np.uint8))]
-#bh_closed = [cv2.morphologyEx(bh_open[0],cv2.MORPH_CLOSE,np.ones((1,1),np.uint8))]
-#bh_blr=[cv2.GaussianBlur(bh_closed[0],(3,3),0)]
-#bh_thresh=[cv2.threshold(bh_blr[0],95,255,cv2.THRESH_BINARY)[1]]
-#
-#cv2.imshow('bh_thresh[0]',bh_thresh[0])
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
-#
-#
-#for index in range(6):
-#    bh_open.append(cv2.morphologyEx(bh_thresh[index],cv2.MORPH_OPEN,np.ones((2,2),np.uint8)))
-#    bh_closed.append(cv2.morphologyEx(bh_open[index+1],cv2.MORPH_CLOSE,np.ones((2,2),np.uint8)))
-#    bh_blr.append(cv2.GaussianBlur(bh_closed[index+1],(1,15),3))
-#    bh_thresh.append(cv2.threshold(bh_blr[index+1],112,255,cv2.THRESH_BINARY)[1])
-#    
-#    cv2.imshow(str(index+1),bh_thresh[index+1])
-#    cv2.waitKey(0)
-#    cv2.destroyAllWindows()
-    
+
+bh_open = [cv2.morphologyEx(blackhat,cv2.MORPH_OPEN,np.ones((2,2),np.uint8))]
+bh_closed = [cv2.morphologyEx(bh_open[0],cv2.MORPH_CLOSE,np.ones((1,1),np.uint8))]
+bh_blr=[cv2.GaussianBlur(bh_closed[0],(9,9),2)]
+
+
+for index in range(2):
+    bh_open.append(cv2.morphologyEx(bh_blr[index],cv2.MORPH_OPEN,np.ones((3,3),np.uint8)))
+    bh_closed.append(cv2.morphologyEx(bh_open[index+1],cv2.MORPH_CLOSE,np.ones((4,4),np.uint8)))
+    bh_blr.append(cv2.GaussianBlur(bh_closed[index+1],(1,11),3))
+    cv2.imshow(str(index+1),bh_blr[index+1])
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+test=cv2.threshold(bh_blr[1],105,255,cv2.THRESH_BINARY)[1]
+
+cv2.imshow('test',test)
+cv2.waitKey(0)
+cv2.destroyAllWindows()    
     
 #compare=np.zeros((30,30,1),np.uint8)
 #compare=cv2.ellipse(compare,(15,15),(18,12),175.0,0.0,360.0,(255,255,255),-1)
