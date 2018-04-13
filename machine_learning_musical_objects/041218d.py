@@ -6,8 +6,8 @@ import csv
 import pandas as pd
 from matplotlib import pyplot as plt
     
-for index in range(21):
-    string='source/scores/img_'+str(index+40)+'.png'
+for index in range(46):
+    string='source/scores/img_'+str(index+20)+'.png'
     print(string)
     img=cv2.imread(string,cv2.IMREAD_GRAYSCALE)
     height,width=img.shape[:2]
@@ -115,6 +115,47 @@ for index in range(21):
 
     df_2=pd.DataFrame(data=lib)
     print(df_2)
+    
+    
+    
+    
+    info=df_2.iloc[1:2,:]
+    show=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
+    cv2.imshow('show',show)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    w, h = show.shape[::-1]
+    methods = ['cv2.TM_CCOEFF_NORMED','cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF_NORMED']
+    for meth in methods:
+        img2 = img.copy()
+        method = eval(meth)
+        
+        # Apply template Matching
+        res = cv2.matchTemplate(img2,show,method)
+        #    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+
+        cv2.imshow('res',res)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+#    # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+#    if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+#        top_left = min_loc
+#    else:
+#        top_left = max_loc
+#    bottom_right = (top_left[0] + w, top_left[1] + h)
+#
+#    cv2.rectangle(img,top_left, bottom_right, 255, 2)
+#
+#    plt.subplot(121),plt.imshow(res,cmap = 'gray')
+#    plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
+#    plt.subplot(122),plt.imshow(img,cmap = 'gray')
+#    plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
+#    plt.suptitle(meth)
+#
+#    plt.show()
+
+
 
 #cv2.imshow('bh_closed',bh_closed[1])
 ##cv2.imshow('bh_closed',bh_closed[1])
