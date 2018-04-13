@@ -24,13 +24,13 @@ for index in range(1):
     img_close=cv2.morphologyEx(img_open,cv2.MORPH_CLOSE,np.ones((5,1),np.uint8))
     img_closed_blr=cv2.GaussianBlur(img_close,(3,3),0)
     
-    cv2.imshow('img_threshold',img_threshold)
+    cv2.imshow('img_closed_blr',img_closed_blr)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
     img_closed_thresh=cv2.threshold(img_closed_blr,101,255,cv2.THRESH_BINARY)[1]
     
-    cv2.imshow('img_threshold',img_threshold)
+    cv2.imshow('img_closed_thresh',img_closed_thresh)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
@@ -39,7 +39,7 @@ for index in range(1):
     img_y_open=cv2.morphologyEx(img_y_thresh,cv2.MORPH_OPEN,np.ones((5,5),np.uint8))
     img_y_close=cv2.morphologyEx(img_y_open,cv2.MORPH_CLOSE,np.ones((2,2),np.uint8))
     
-    cv2.imshow('img_threshold',img_threshold)
+    cv2.imshow('img_y_close',img_y_close)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
@@ -65,7 +65,7 @@ for index in range(1):
     show_boxes=blackhat_closed.copy()
     hold_0,contours_0,hierarchy=cv2.findContours(blackhat_closed_blr,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
-    boxes={'x0':[],'y0':[],'x1':[],'y1':[],'area':[],'angle':[]}#,'pixel_mean':[],'pixel_mean_q0':[],'pixel_mean_q1':[],'pixel_mean_q2':[],'pixel_mean_q3':[]}
+    boxes={'x0':[],'y0':[],'x1':[],'y1':[],'area':[],'angle':[],'pixel_mean':[],'pixel_mean_q0':[],'pixel_mean_q1':[],'pixel_mean_q2':[],'pixel_mean_q3':[]}
     for c in contours_0:
         x,y,w,h=cv2.boundingRect(c)
         show_boxes=cv2.rectangle(show_boxes,(x,y),(x+w,y+h),(155,155,155),2)
@@ -79,26 +79,26 @@ for index in range(1):
         else:
             angle=-1
         boxes['angle'].append(angle)
-#        value= bh_closed[5][int(y):int(y+h),int(x):int(x+w)]
-#        boxes['pixel_mean'].append(np.mean(value))
-#        if w >= 2 and h >= 2:
-#            y_0,y_1,x_0,x_1=int(y),int(y+(h/2)),int(x),int(x+(w/2))
-#            value=bh_closed[5][y_0:y_1,x_0:x_1]
-#            boxes['pixel_mean_q0'].append(np.mean(value))
-#            y_0,y_1,x_0,x_1=int(y+(h/2)),int(y+h),int(x),int(x+(w/2))
-#            value=bh_closed[5][y_0:y_1,x_0:x_1]
-#            boxes['pixel_mean_q1'].append(np.mean(value))
-#            y_0,y_1,x_0,x_1=int(y),int(y+(h/2)),int(x+(w/2)),int(x+w)
-#            value=bh_closed[5][y_0:y_1,x_0:x_1]
-#            boxes['pixel_mean_q2'].append(np.mean(value))
-#            y_0,y_1,x_0,x_1=int(y+(h/2)),int(y+h),int(x+(w/2)),int(x+w)
-#            value=bh_closed[5][y_0:y_1,x_0:x_1]
-#            boxes['pixel_mean_q3'].append(np.mean(value))
-#        else:
-#            boxes['pixel_mean_q0'].append(-1)
-#            boxes['pixel_mean_q1'].append(-1)
-#            boxes['pixel_mean_q2'].append(-1)
-#            boxes['pixel_mean_q3'].append(-1)
+        value=show_boxes[int(y):int(y+h),int(x):int(x+w)]
+        boxes['pixel_mean'].append(np.mean(value))
+        if w >= 2 and h >= 2:
+            y_0,y_1,x_0,x_1=int(y),int(y+(h/2)),int(x),int(x+(w/2))
+            value=show_boxes[y_0:y_1,x_0:x_1]
+            boxes['pixel_mean_q0'].append(np.mean(value))
+            y_0,y_1,x_0,x_1=int(y+(h/2)),int(y+h),int(x),int(x+(w/2))
+            value=show_boxes[y_0:y_1,x_0:x_1]
+            boxes['pixel_mean_q1'].append(np.mean(value))
+            y_0,y_1,x_0,x_1=int(y),int(y+(h/2)),int(x+(w/2)),int(x+w)
+            value=show_boxes[y_0:y_1,x_0:x_1]
+            boxes['pixel_mean_q2'].append(np.mean(value))
+            y_0,y_1,x_0,x_1=int(y+(h/2)),int(y+h),int(x+(w/2)),int(x+w)
+            value=show_boxes[y_0:y_1,x_0:x_1]
+            boxes['pixel_mean_q3'].append(np.mean(value))
+        else:
+            boxes['pixel_mean_q0'].append(-1)
+            boxes['pixel_mean_q1'].append(-1)
+            boxes['pixel_mean_q2'].append(-1)
+            boxes['pixel_mean_q3'].append(-1)
         df=pd.DataFrame(data=boxes)   
 
 
@@ -135,29 +135,47 @@ for index in range(1):
     
     
     
-    info=df_2.iloc[1:2,:]
+    info=df.iloc[522:523,:]
     show=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
     cv2.imshow('show',show)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    
     w, h = show.shape[::-1]
+    
+#    find_notehead=show[int(2/3*h):h,0:w]
+#    
+#    w, h = find_notehead.shape[::-1]
+#    if w%2 != 1:
+#        w= w-1
+#    if h%2 != 1:
+#        h=h-1
+#    find_notehead_blr=cv2.GaussianBlur(find_notehead,(w,h),0)
+    
+#    cv2.imshow('find_notehead_blr',find_notehead_blr)
+#    cv2.waitKey(0)
+#    cv2.destroyAllWindows()
+    
+    
     methods = ['cv2.TM_SQDIFF_NORMED']
     for meth in methods:
         img2 = img.copy()
+#        img2_blr=cv2.GaussianBlur(img2,(w,h),0)
         method = eval(meth)
         
         # Apply template Matching
         res = cv2.matchTemplate(img2,show,method)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         
-        min_thresh=0.05
+        min_thresh=0.1
         match_locations=np.where(res<=min_thresh)
         
         w,h=show.shape[::-1]
+        dummy=img.copy()
         for(x,y) in zip(match_locations[1],match_locations[0]):
-            cv2.rectangle(img,(x,y),(x+w,y+h),[155,155,155],2)
+            cv2.rectangle(dummy,(x,y),(x+w,y+h),[155,155,155],2)
         
-        cv2.imshow('res',img)
+        cv2.imshow('res',dummy)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
