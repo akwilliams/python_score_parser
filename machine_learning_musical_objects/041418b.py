@@ -111,25 +111,25 @@ index=94
 hold={'mult':[],'g_clef':[],'f_clef':[],'c_clef':[],'sharp':[],'flat':[],'natural':[],'bracket':[],'other':[],'g_clef_8':[],'f_clef_8':[],'c_clef_8':[]}
 
 df=df.sort_values(by=['area'],ascending=[False])
-
-while item!='stop':
-    info=df.iloc[index:,:]
-    show=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
-    cv2.imshow('show',show)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    item=input('What was that?')
-    if item=='bracket':
-        modifier=input('Containing how many staves?')
-        hold[item].append([index,modifier])
-    elif item=='stop':
-        print('gotcha')
-    elif item=='other':
-        modifier=input('What is it?')
-        hold[item].append([index,modifier])
-    else:
-        hold[item].append(index)
-    index=index+1
+#
+#while item!='stop':
+#    info=df.iloc[index:,:]
+#    show=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
+#    cv2.imshow('show',show)
+#    cv2.waitKey(0)
+#    cv2.destroyAllWindows()
+#    item=input('What was that?')
+#    if item=='bracket':
+#        modifier=input('Containing how many staves?')
+#        hold[item].append([index,modifier])
+#    elif item=='stop':
+#        print('gotcha')
+#    elif item=='other':
+#        modifier=input('What is it?')
+#        hold[item].append([index,modifier])
+#    else:
+#        hold[item].append(index)
+#    index=index+1
 
 #df_1=df.iloc[hold['g_clef'],:]
 
