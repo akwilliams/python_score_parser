@@ -103,7 +103,7 @@ for index in range(46):
     df_1=df_1.round({'area':-1,'ratio':1,'pixel_mean':0})
     df_1=df_1.loc[df_1['ratio']<df_1.iloc[:9,:]['ratio'].mode()[0]*1.03]
     df_1=df_1.loc[df_1['ratio']>df_1.iloc[:9,:]['ratio'].mode()[0]*0.97]
-    if len(df_1.iloc[:9,:]['width'].mode())!=9:
+    if len(df_1.iloc[:9,:]['width'].mode())==1:
         df_1=df_1.loc[df_1['width']<df_1.iloc[:9,:]['width'].mode()[0]*1.02]
         df_1=df_1.loc[df_1['width']>df_1.iloc[:9,:]['width'].mode()[0]*0.98]
 #    df_1=df_1.loc[df_1['pixel_mean']>50]
