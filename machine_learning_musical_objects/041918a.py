@@ -6,8 +6,8 @@ import csv
 import pandas as pd
 from matplotlib import pyplot as plt
 
-for index in range(6):
-    string='source/scores/bartok_piano/img_'+str(index+1)+'.png'
+for index in range(1):
+    string='source/scores/img_'+str(index+20)+'.png'
     print(string)
     img=cv2.imread(string,cv2.IMREAD_GRAYSCALE)
     height,width=img.shape[:2]
@@ -97,7 +97,7 @@ for index in range(6):
 
     #Find Treble Clefs
 
-#    #Pass Zero: Shape and pattern parsing
+#    #Shape and pattern parsing
 #
 #    df_1=df.loc[df['ratio']>2.5].copy()
 #    df_1=df_1.loc[df_1['ratio']<3.1]
@@ -147,7 +147,7 @@ for index in range(6):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     
-        difference=500
+        difference=802
         precision=0.105
     
         for index in range(50):
@@ -156,7 +156,7 @@ for index in range(6):
 #            show_locations=img.copy()
             df_2=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
             difference=df_2['x'].max()-df_2['x'].min()
-            if difference<500 or len(df_2.index.tolist())<1:# or type(difference)!='numpy.int64'::
+            if difference<=801 or len(df_2.index.tolist())<1:# or type(difference)!='numpy.int64'::
 #                match_locations=np.where(res<=precision-(precision*0.1))
 #                show_locations=img.copy()
 #                df_2=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
@@ -169,42 +169,17 @@ for index in range(6):
         df_2=df_2.loc[df_2['delta_y']>1]
         if len(df_2.index.tolist())>1:
             break
-        
+    df_2=df_2.append(hold)    
     if len(df_2.index.tolist())>0:
         w,h=info['width'].tolist()[0],info['height'].tolist()[0]
         for index,row in df_2.iterrows():
             cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+w),int(row['y']+h)),[155,155,155],2)
         
-        cv2.rectangle(img_dup,(int(hold['x'].tolist()[0]),int(hold['y'].tolist()[0])),(int(hold['x'].tolist()[0]+w),int(hold['y'].tolist()[0]+h)),[155,155,155],2)
-    
+        
         print(len(df_2.index.tolist())+1)
        
         cv2.imshow('thing',img_dup)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         
-    #df.center_y.diff().shift(-1).fillna(0)
-    
-#    methods = ['cv2.TM_SQDIFF_NORMED']
-#    for meth in methods:
-#        img2 = img.copy()
-##        img2_blr=cv2.GaussianBlur(img2,(w,h),0)
-#        method = eval(meth)
-#        
-#        # Apply template Matching
-#        res = cv2.matchTemplate(img2,show,method)
-#        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-#        
-#        min_thresh=0.1
-#        match_locations=np.where(res<=min_thresh)
-#        
-#        w,h=show.shape[::-1]
-#        dummy=img.copy()
-#        for(x,y) in zip(match_locations[1],match_locations[0]):
-#            cv2.rectangle(dummy,(x,y),(x+w,y+h),[155,155,155],2)
-#        
-#        cv2.imshow('res',dummy)
-#        cv2.waitKey(0)
-#        cv2.destroyAllWindows()
-        
-        
+
