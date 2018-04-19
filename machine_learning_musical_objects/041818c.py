@@ -6,8 +6,8 @@ import csv
 import pandas as pd
 from matplotlib import pyplot as plt
     
-for index in range(25):
-    string='source/scores/img_'+str(index+20)+'.png'
+for index in range(1):
+    string='source/scores/img_'+str(index+21)+'.png'
     print(string)
     img=cv2.imread(string,cv2.IMREAD_GRAYSCALE)
     height,width=img.shape[:2]
@@ -100,7 +100,7 @@ for index in range(25):
     df_1=df.loc[df['ratio']>2.5].copy()
     df_1=df_1.loc[df_1['ratio']<3.1]
     df_1=df_1.loc[df_1['area']<15*df['area'].mean()]
-    df_1=df_1.round({'area':-1,'ratio':1})
+    df_1=df_1.round({'area':-1,'ratio':1,'pixel_mean':0})
     df_1=df_1.loc[df_1['ratio']<df_1.iloc[:9,:]['ratio'].mode()[0]*1.03]
     df_1=df_1.loc[df_1['ratio']>df_1.iloc[:9,:]['ratio'].mode()[0]*0.97]
     if len(df_1.iloc[:9,:]['height'].mode())!=9:
