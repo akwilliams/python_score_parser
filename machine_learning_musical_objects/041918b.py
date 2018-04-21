@@ -7,7 +7,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 for index in range(1):
-    string='source/scores/img_'+str(index+20)+'.png'
+    string='source/scores/bartok_piano/img_'+str(index+4)+'.png'
     print(string)
     img=cv2.imread(string,cv2.IMREAD_GRAYSCALE)
     height,width=img.shape[:2]
@@ -114,7 +114,7 @@ for index in range(1):
         
     df_1=df.loc[df['ratio']>2.5].copy()
     df_1=df_1.loc[df_1['ratio']<3.1]
-    df_1=df_1.loc[df_1['area']<20000]
+    df_1=df_1.loc[df_1['area']<25000]
     df_1=df_1.loc[df_1['area']>3000]
     df_1=df_1.loc[df_1['pixel_mean_q0']>df_1['pixel_mean_q1']]
     df_1=df_1.loc[df_1['pixel_mean_q0']>df_1['pixel_mean_q2']]
@@ -125,10 +125,10 @@ for index in range(1):
         df_1=df_1.loc[df_1['x0']<df_1['x0'].max()]
 
     num=len(df_1.index.tolist())
-    if num > 5:
-        num=5
+    if num > 8:
+        num=8
 
-    for val in range(num):    
+    for val in range(1):    
         info=df_1.iloc[val:,:]
         w,h=int(info['width'].tolist()[0]*0.25),int(info['height'].tolist()[0]*0.25)
         if w%2!=1:
@@ -150,24 +150,50 @@ for index in range(1):
         difference=802
         precision=0.105
     
-        for index in range(50):
-            print(difference,index)
+        for index in range(1):
+#            print(difference,index)
             match_locations=np.where(res<=precision)
 #            show_locations=img.copy()
             df_2=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
+#            print(df_2)
+            df_6=df_2.copy()
+            hold=df_2.iloc[0:1,:]
+            df_2['delta_x']=df_2['x'].diff().shift(1).fillna(df_2['x'].diff().shift(-1))
+            df_2['delta_y']=df_2['y'].diff().shift(1).fillna(df_2['y'].diff().shift(-1))
+#            df_2=df_2.loc[df_2['x']<df_2['x'].min()*1.25]
+            df_2=df_2.loc[df_2['delta_y']>1]
+            df_5=df_2.copy()
+            df_5=df_5.append(hold)
+            height,width=img.shape[:2]
+            df_5=df_5.append(pd.DataFrame(data={'y':[0,height],'x':[0,0]}))
+            df_5=df_5.sort_values(by=['y'],ascending=[True])
+            container=[]
+            for index_0 in range(len(df_5.index.tolist())-1):
+#                print(df_5.iloc[index_0:,:]['y'].tolist()[0],df_5.iloc[(index_0+1):,:]['y'].tolist()[0]-1)
+#                print(df_2.loc[df_2['y']>df_5.iloc[index_0:,:]['y'].tolist()[0]])
+                temp_0=df_6.loc[df_6['y']>=df_5.iloc[index_0:,:]['y'].tolist()[0]].copy().index.tolist()
+                temp_1=df_6.loc[df_6['y']<(df_5.iloc[(index_0+1):,:]['y'].tolist()[0]-1)].copy().index.tolist()
+                container.append([vari for vari in temp_0 if vari in temp_1])
+                
+            for instance in container:
+                if len(instance)>0:
+                    df_7=df_6.iloc[instance[0]:instance[-1],:].copy()
+                    print(df_7['x'].min()-df_7['x'].max())
+#            print(df_5)
+#            print(container)
             difference=df_2['x'].max()-df_2['x'].min()
-            if difference<=801 or len(df_2.index.tolist())<1:# or type(difference)!='numpy.int64'::
+            if len(df_2.index.tolist())<1:# or type(difference)!='numpy.int64'::
 #                match_locations=np.where(res<=precision-(precision*0.1))
 #                show_locations=img.copy()
 #                df_2=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
-                print(difference)
+#                print(difference)
                 break
             precision=precision-0.005
         hold=df_2.iloc[0:1,:]
         df_2['delta_x']=df_2['x'].diff().shift(1).fillna(df_2['x'].diff().shift(-1))
         df_2['delta_y']=df_2['y'].diff().shift(1).fillna(df_2['y'].diff().shift(-1))
         df_2=df_2.loc[df_2['delta_y']>1]
-        if len(df_2.index.tolist())>1:
+        if len(df_2.index.tolist())>0:
             break
     df_2=df_2.append(hold)    
     if len(df_2.index.tolist())>0:
@@ -183,34 +209,68 @@ for index in range(1):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         
-df_3=df.loc[df['x0']>=df_2['x'].min()*0.95].copy()
-df_3=df_3.loc[df_3['x0']<=df_2['x'].min()*1.05]
-df_3=df_3.loc[df_3['x1']<=df_1['x1'].max()*1.2]
-df_3=df_3.loc[df_3['height']<=df_1['height'].max()]
-df_3=df_3.loc[df_3['width']<=df_1['width'].max()*1.1]
-df_3=df_3.sort_values(by=['y0'],ascending=[True])
+    df_3=df.loc[df['x0']>=df_2['x'].min()*0.95].copy()
+    df_3=df_3.loc[df_3['x0']<=df_2['x'].min()*1.05]
+    df_3=df_3.loc[df_3['x1']<=df_1['x1'].max()*1.2]
+    df_3=df_3.loc[df_3['height']<=df_1['height'].max()]
+    df_3=df_3.loc[df_3['width']<=df_1['width'].max()*1.1]
+    df_3=df_3.loc[df_3['area']>=df_1['area'].min()*0.6]
+    df_3=df_3.sort_values(by=['y0'],ascending=[True])
+    
+#    for index,row in df_3.iterrows():
+#        for val in df_2['x'].tolist():
+#            if row['x0']-10<val and row['x0']>val:
+#            locations.append(index)
 
-locations=[]
+#places = df_3.index.tolist()
 
-for index,row in df_3.iterrows():
-    for val in df_2['x'].tolist():
-        if row['x0']-10<val and row['x0']>val:
-            locations.append(index)
-
-places = df_3.index.tolist()
-other = 
-
-df_3=df_3.loc[df_3.index.tolist()!=locations]
+#df_3=df_3.loc[df_3.index.tolist()!=locations]
 
 
-if len(df_3.index.tolist())>0:
+    if len(df_3.index.tolist())>0:
 #    w,h=info['width'].tolist()[0],info['height'].tolist()[0]
-    img_dup=img.copy()
-    for index,row in df_3.iterrows():
-        cv2.rectangle(img_dup,(int(row['x0']),int(row['y0'])),(int(row['x1']),int(row['y1'])),[155,155,155],2)
+        img_dup=img.copy()
+        for index,row in df_3.iterrows():
+            cv2.rectangle(img_dup,(int(row['x0']),int(row['y0'])),(int(row['x1']),int(row['y1'])),[155,155,155],2)
         
-    cv2.imshow('thing',img_dup)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        cv2.imshow('thing',img_dup)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
+    for val in range(len(df_3.index.tolist())):    
+        info=df_3.iloc[val:,:]
+        w,h=int(info['width'].tolist()[0]*0.25),int(info['height'].tolist()[0]*0.25)
+        if w%2!=1:
+            w=w-1
+        if h%2!=1:
+            h=h-1
+        img_dup=img.copy()
+        img_dup_blr=cv2.GaussianBlur(img_dup,(w,h),0)
+        template=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
+        template_blr=cv2.GaussianBlur(template,(w,h),0)
+    
+        res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        match_locations=np.where(res<=precision)
+        show_locations=img.copy()
+        df_4=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
+           
+
+        cv2.imshow('template',template)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        img_dup=img.copy()    
+        
+        if len(df_4.index.tolist())>0:
+            w,h=info['width'].tolist()[0],info['height'].tolist()[0]
+            for index,row in df_4.iterrows():
+                cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+w),int(row['y']+h)),[155,155,155],2)
+        
+        
+            df_2=df_2.sort_values(by=['y'])
+            df_2['delta_y']=df_2['y'].diff().shift(1).fillna(df_2['y'].diff().shift(-1))
+       
+            cv2.imshow('thing',img_dup)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()        
