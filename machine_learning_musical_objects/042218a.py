@@ -228,39 +228,39 @@ def find_clefs_from_reference(df_0,df_1,img):
             if h%2!=1:
                 h=h-1
             
-            img_dup=img.copy()
-            img_dup_blr=cv2.GaussianBlur(img_dup,(w,h),0)
+#            img_dup=img.copy()
+#            img_dup_blr=cv2.GaussianBlur(img_dup,(w,h),0)
             template=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
-            template_blr=cv2.GaussianBlur(template,(w,h),0)
+#            template_blr=cv2.GaussianBlur(template,(w,h),0)
             
             cv2.imshow('template',template)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
             
-            res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
-            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-#            
-            resolution=0.045
-#            
-            match_locations=np.where(res<=resolution)
-#            resolution=resolution-0.005
-            df_5=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
-            df_6=df_5.copy()
-            df_6['delta_x']=df_6['x'].diff().shift(1).fillna(df_6['x'].diff().shift(-1))
-            df_6['delta_y']=df_6['y'].diff().shift(1).fillna(df_6['y'].diff().shift(-1))
-            df_6=df_6.loc[df_6['delta_y']>1]
-            df_6=df_6.append(df_5.iloc[0:1,:])
-            print(df_6)
-#            
-            if len(df_6.index.tolist())>0:
-                w,h=info['width'].tolist()[0],info['height'].tolist()[0]
-                img_dup=img.copy()
-                for index,row in df_6.iterrows():
-                    cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+w),int(row['y']+h)),[155,155,155],2)
-#        
-            cv2.imshow('thing',img_dup)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+#            res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
+#            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+##            
+#            resolution=0.045
+##            
+#            match_locations=np.where(res<=resolution)
+##            resolution=resolution-0.005
+#            df_5=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
+#            df_6=df_5.copy()
+#            df_6['delta_x']=df_6['x'].diff().shift(1).fillna(df_6['x'].diff().shift(-1))
+#            df_6['delta_y']=df_6['y'].diff().shift(1).fillna(df_6['y'].diff().shift(-1))
+#            df_6=df_6.loc[df_6['delta_y']>1]
+#            df_6=df_6.append(df_5.iloc[0:1,:])
+#            print(df_6)
+##            
+#            if len(df_6.index.tolist())>0:
+#                w,h=info['width'].tolist()[0],info['height'].tolist()[0]
+#                img_dup=img.copy()
+#                for index,row in df_6.iterrows():
+#                    cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+w),int(row['y']+h)),[155,155,155],2)
+##        
+#            cv2.imshow('thing',img_dup)
+#            cv2.waitKey(0)
+#            cv2.destroyAllWindows()
     else:
         container_change=[]
         for index in range(len(df_1.index.tolist())):
@@ -286,6 +286,7 @@ def find_clefs_from_reference(df_0,df_1,img):
             df_2=df_2.loc[df_2['width']>df_1['width'].min()*0.5]
             df_2=df_2.loc[df_2['height']<df_1['height'].max()*1.3]
             df_2=df_2.loc[df_2['ratio']>1]
+            df_2=df_2.loc[df_2['area']>df_1['width'].min()*df_1['height'].min()*0.3]
             df_2=df_2.sort_values(by=['area'],ascending=[False])
             df_2=df_2.reset_index(drop=True)
             print('min_x: ',df_2['x0'].min(),' max_x: ',df_2['x0'].max(),' min_y: ',df_2['y0'].min(),' max_y: ',df_2['y0'].max())
@@ -297,39 +298,39 @@ def find_clefs_from_reference(df_0,df_1,img):
                 if h%2!=1:
                     h=h-1
             
-                img_dup=img.copy()
-                img_dup_blr=cv2.GaussianBlur(img_dup,(w,h),0)
+#                img_dup=img.copy()
+#                img_dup_blr=cv2.GaussianBlur(img_dup,(w,h),0)
                 template=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
-                template_blr=cv2.GaussianBlur(template,(w,h),0)
+#                template_blr=cv2.GaussianBlur(template,(w,h),0)
             
                 cv2.imshow('template',template)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
                 
-                res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
-                min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-#            
-                resolution=0.045
-#            
-                match_locations=np.where(res<=resolution)
-#                resolution=resolution-0.005
-                df_5=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
-                df_6=df_5.copy()
-                df_6['delta_x']=df_6['x'].diff().shift(1).fillna(df_6['x'].diff().shift(-1))
-                df_6['delta_y']=df_6['y'].diff().shift(1).fillna(df_6['y'].diff().shift(-1))
-                df_6=df_6.loc[df_6['delta_y']>1]
-                df_6=df_6.append(df_5.iloc[0:1,:])
-                print(df_6)
-#            
-                if len(df_6.index.tolist())>0:
-                    w,h=info['width'].tolist()[0],info['height'].tolist()[0]
-                    img_dup=img.copy()
-                    for index,row in df_6.iterrows():
-                        cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+w),int(row['y']+h)),[155,155,155],2)
-#        
-                cv2.imshow('thing',img_dup)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+#                res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
+#                min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+##            
+#                resolution=0.045
+##            
+#                match_locations=np.where(res<=resolution)
+##                resolution=resolution-0.005
+#                df_5=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
+#                df_6=df_5.copy()
+#                df_6['delta_x']=df_6['x'].diff().shift(1).fillna(df_6['x'].diff().shift(-1))
+#                df_6['delta_y']=df_6['y'].diff().shift(1).fillna(df_6['y'].diff().shift(-1))
+#                df_6=df_6.loc[df_6['delta_y']>1]
+#                df_6=df_6.append(df_5.iloc[0:1,:])
+#                print(df_6)
+##            
+#                if len(df_6.index.tolist())>0:
+#                    w,h=info['width'].tolist()[0],info['height'].tolist()[0]
+#                    img_dup=img.copy()
+#                    for index,row in df_6.iterrows():
+#                        cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+w),int(row['y']+h)),[155,155,155],2)
+##        
+#                cv2.imshow('thing',img_dup)
+#                cv2.waitKey(0)
+#                cv2.destroyAllWindows()
                 
 #        print(container_change)
 #        df_2=container_change
@@ -340,8 +341,8 @@ def find_clefs_from_reference(df_0,df_1,img):
 
 
     
-for val in range(1):
-    df_0,img=init_img_filter('source/scores/img_'+str(val+28)+'.png')
+for val in range(20):
+    df_0,img=init_img_filter('source/scores/img_'+str(val+25)+'.png')
     df_1=find_g_clefs(df_0,img)
     df_2=find_clefs_from_reference(df_0,df_1,img)
     
