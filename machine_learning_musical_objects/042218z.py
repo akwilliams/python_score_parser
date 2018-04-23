@@ -319,8 +319,8 @@ def find_clefs_from_reference(df_0,df_1,img):
                 match_locations=np.where(res<=resolution)
                 df_3=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
                 df_4=df_3.copy()
-                df_4['delta_x']=df_4['x'].diff().shift(1).fillna(df_4['x'].diff().shift(-1))
-                df_4['delta_y']=df_4['y'].diff().shift(1).fillna(df_4['y'].diff().shift(-1))
+                df_4['delta_x']=df_4['x'].diff().shift().fillna(df_4['x'].diff().shift(-1))
+                df_4['delta_y']=df_4['y'].diff().shift().fillna(df_4['y'].diff().shift(-1))
                 df_4=df_4.loc[df_4['delta_y']>1]
                 df_4=df_4.append(df_3.iloc[0:1,:].copy())
                 df_4['height']=[int(info['height'].tolist()[0])]*len(df_4.index.tolist())
@@ -346,8 +346,22 @@ def find_clefs_from_reference(df_0,df_1,img):
         df_7=df_7.loc[df_7['x']<=df_1['x'].max()*1.02]
         df_7=df_7.loc[df_7['x']>=df_1['x'].min()*0.98]
         df_7=df_7.reset_index(drop=True)
-        df_7['delta_y']=df_7['y'].diff().shift(1).fillna(df_7['y'].diff().shift(-1))
-        df_7['delta_x']=df_7['x'].diff().shift(1).fillna(df_7['x'].diff().shift(-1))
+        df_7['delta_y']=df_7['y'].diff().shift(-1).fillna(df_7['y'].diff().shift())
+        df_7['delta_x']=df_7['x'].diff().shift(-1).fillna(df_7['x'].diff().shift())
+        
+        offset=0
+        
+        for index_0 in range(len(df_7.loc[df_7['delta_y'].index.tolist()>100])):
+            if df_7.iloc[index_0:,:]['delta_y'].tolist()[0]<100:
+                for index_1 in range(len(df_7.index.tolist())-index_0):
+                    if df_7.iloc[index_0+index_1:,:]['delta_y'].tolist()[0]>100:
+                        location=index_0+index_1
+                        offset=offset+index_1
+                        break
+                #code
+            else:
+            
+            
         if len(df_7.index.tolist())>0:
             w,h=info['width'].tolist()[0],info['height'].tolist()[0]
             img_dup=img.copy()
@@ -358,7 +372,6 @@ def find_clefs_from_reference(df_0,df_1,img):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
                 
-
     return df_7
 
 
@@ -370,6 +383,7 @@ for val in range(1):
     df_0,img=init_img_filter('source/scores/img_'+str(val+27)+'.png')
     df_1=find_g_clefs(df_0,img)
     df_2=find_clefs_from_reference(df_0,df_1,img)
+    len(df_2.loc[df_2['delta_y']>100])
     
   
     
