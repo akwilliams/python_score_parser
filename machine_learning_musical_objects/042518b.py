@@ -195,7 +195,7 @@ def find_g_clefs(df,img):
 
 def find_clefs_from_reference(df_0,df_1,img):
     
-    if(df_1['x'].max()-df_1['x'].min()<75):
+    if(df_1['x'].max()-df_1['x'].min()<35):
         df_2=df_0.loc[df_0['x0']<((df_1['x'].max()+df_1['width'].max())*1.1)].copy()
         df_2=df_2.loc[df_2['x0']>df_1['x'].min()*0.9]
         df_2=df_2.loc[df_2['width']>df_1['width'].min()*0.5]
@@ -243,7 +243,6 @@ def find_clefs_from_reference(df_0,df_1,img):
             resolution=0.045
 #            
             match_locations=np.where(res<=resolution)
-#            resolution=resolution-0.005
             df_5=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
             df_6=df_5.copy()
             df_6['delta_x']=df_6['x'].diff().shift(1).fillna(df_6['x'].diff().shift(-1))
@@ -268,35 +267,21 @@ def find_clefs_from_reference(df_0,df_1,img):
             val_2=val_0-val_1
             if val_2>75:
                 container_change.append(index)
-        print(len(container_change))
         for index_0 in range(len(container_change)+1):
             if index_0==(len(container_change)):
                 x0,x1,y0,y1=df_1.iloc[container_change[index_0-1]+1:,:]['x'].tolist()[0]*0.98,df_1.iloc[container_change[index_0-1]+1:,:]['x'].tolist()[0]*1.02,df_1.iloc[container_change[index_0-1]+1:,:]['y'].tolist()[0]*0.98,-1
-#                print('y0>',df_1.iloc[container_change[index_0-1]:,:]['y'].tolist()[0]*0.98,'x0>',df_1.iloc[container_change[index_0-1]+1:,:]['x'].tolist()[0]*0.98,'x0<',df_1.iloc[container_change[index_0-1]+1:,:]['x'].tolist()[0]*1.02)
-#                df_2=df_0.loc[df_0['y0']>df_1.iloc[container_change[index_0-1]:,:]['y'].tolist()[0]*0.98].copy()
-#                df_2=df_2.loc[df_2['x0']>df_1.iloc[container_change[index_0-1]+1:,:]['x'].tolist()[0]*0.98]
-#                df_2=df_2.loc[df_2['x0']<df_1.iloc[container_change[index_0-1]+1:,:]['x'].tolist()[0]*1.02]
+
             else:
                 if index_0==0:
                     y0,y1=0,df_1.iloc[(container_change[index_0]+1):,:]['y'].tolist()[0]*1.02
-#                    print('y0<',df_1.iloc[(container_change[index_0]+1):,:]['y'].tolist()[0]*1.02)
-#                    df_2=df_0.loc[df_0['y0']<df_1.iloc[(container_change[index_0]+1):,:]['y'].tolist()[0]*1.02].copy()
                 else:
                     y1,y0=df_1.iloc[(container_change[index_0]+1):,:]['y'].tolist()[0]*1.02,df_1.iloc[(container_change[index_0]):,:]['y'].tolist()[0]*0.98
-#                    print('y0<',df_1.iloc[(container_change[index_0]):,:]['y'].tolist()[0]*0.98,'y0>',df_1.iloc[(container_change[index_0]-1):,:]['y'].tolist()[0]*0.98)
-#                    df_2=df_0.loc[df_0['y0']<df_1.iloc[(container_change[index_0]):,:]['y'].tolist()[0]*0.98].copy()
-#                    df_2=df_2.loc[df_2['y0']>df_1.iloc[(container_change[index_0]+1):,:]['y'].tolist()[0]*1.02]
-#                print('x0>',df_1.iloc[container_change[index_0]:,:]['x'].tolist()[0]*0.98,'x0<',df_1.iloc[container_change[index_0]:,:]['x'].tolist()[0]*1.1)
                 x0,x1=df_1.iloc[container_change[index_0]:,:]['x'].tolist()[0]*0.98,df_1.iloc[container_change[index_0]:,:]['x'].tolist()[0]*1.1
-#                df_2=df_2.loc[df_2['x0']>df_1.iloc[container_change[index_0]:,:]['x'].tolist()[0]*0.98]
-#                df_2=df_2.loc[df_2['x0']<df_1.iloc[container_change[index_0]:,:]['x'].tolist()[0]*1.1]
-            print(x0,y0,x1,y1)
             df_2=df_0.loc[df_0['x0']>x0].copy()
             df_2=df_2.loc[df_2['x0']<x1]
             df_2=df_2.loc[df_2['y0']>y0]
             if y1>0:
                 df_2=df_2.loc[df_2['y0']<y1]
-            print((df_2.index.tolist()))
             df_2=df_2.loc[df_0['x0']<((df_1['x'].max()+df_1['width'].max())*1.1)].copy()
             df_2=df_2.loc[df_2['x0']>df_1['x'].min()*0.9]
             df_2=df_2.loc[df_2['width']>df_1['width'].min()*0.5]
@@ -308,19 +293,15 @@ def find_clefs_from_reference(df_0,df_1,img):
             df_2['co_scaler']=df_2['height'].shift().fillna(1)
             df_2['crossover']=df_2['crossover'].divide(df_2['co_scaler'])
             df_2['numrow']=df_2.index.tolist()
-#            df_2=df_2.reset_index(drop=True)
-#            print((df_2.index.tolist()))
             if index_0==0:
-                
                 df_3=df_2.copy()
-                print(df_3)
             else:
                 df_3=df_3.append(df_2.copy())
-                print(df_3)
         container_df=[]
-        print(df_3.index.tolist())
+        container_template=[]
         for index_1 in range(len(df_3.index.tolist())):
             info=df_3.iloc[index_1:,:]
+            container_template.append(df_3.iloc[index_1:(index_1+1),:].copy())
             w,h=int(info['width'].tolist()[0]*0.25),int(info['height'].tolist()[0]*0.25)
             if w%2!=1:
                 w=w-1
@@ -332,9 +313,9 @@ def find_clefs_from_reference(df_0,df_1,img):
             template=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
             template_blr=cv2.GaussianBlur(template,(w,h),0)
 
-            cv2.imshow('template',template)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+#            cv2.imshow('template',template)
+#            cv2.waitKey(0)
+#            cv2.destroyAllWindows()
 
             res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
@@ -350,56 +331,62 @@ def find_clefs_from_reference(df_0,df_1,img):
             df_5=df_5.append(df_4.iloc[0:1,:].copy())
             df_5['height']=[int(info['height'].tolist()[0])]*len(df_5.index.tolist())
             df_5['width']=[int(info['width'].tolist()[0])]*len(df_5.index.tolist())
-            if index_1==0:
-                df_6
-#            df_5['index_0']=[index_0]*len(df_5.index.tolist())
-#            df_5['index_1']=[index_1]*len(df_5.index.tolist())
-#            container_df.append(df_4.copy())
-#        for index_1 in range(len(container_df)):
-#            if index_1==0:
-#                df_5=container_df[index_1].copy()
-#            else:
-#                df_5=df_5.append(container_df[index_1].copy())
-#        if index_0==0:
-#            df_6=df_5.copy()
-#        else:
-#            df_6=df_6.append(df_5.copy())
-    df_6=df_5.sort_values(by=['y'],ascending=[True]).copy()       
-    df_6['delta_y']=df_6['y'].diff().shift(1).fillna(df_6['y'].diff().shift(-1))
-    df_7=df_6.loc[df_6['delta_y']>1]
-#    df_7=df_7.append(df_6.iloc[:1,:])
-    df_7=df_7.sort_values(by=['y'],ascending=[True])        
-    df_7['delta_y']=df_7['y'].diff().shift(1).fillna(df_7['y'].diff().shift(-1))
-    df_7=df_7.loc[df_7['x']<=df_1['x'].max()*1.02]
-    df_7=df_7.loc[df_7['x']>=df_1['x'].min()*0.98]
-    df_7=df_7.reset_index(drop=True)
-    df_7['delta_y']=df_7['y'].diff().shift(-1).fillna(df_7['y'].diff().shift())
-    df_7['delta_x']=df_7['x'].diff().shift(-1).fillna(df_7['x'].diff().shift())
-    
-    offset=0
-    
-#    for index_0 in range(len(df_7.loc[df_7['delta_y'].index.tolist()[0]>100])):
-#        if df_7.iloc[index_0:,:]['delta_y'].tolist()[0]<100:
-#            for index_1 in range(len(df_7.index.tolist())-index_0):
-#                if df_7.iloc[index_0+index_1:,:]['delta_y'].tolist()[0]>100:
-#                    location=index_0+index_1
-#                    offset=offset+index_1
-#                    break
-            #code
-#        else:
-        
-        
-    if len(df_7.index.tolist())>0:
-        w,h=info['width'].tolist()[0],info['height'].tolist()[0]
-        img_dup=img.copy()
-        for index,row in df_7.iterrows():
-            cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+row['width']),int(row['y']+row['height'])),[155,155,155],2)
+            container_df.append(df_5.copy())
             
-    cv2.imshow('thing',img_dup)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-                
-    return df_7
+          
+    
+    for index_0 in range(len(container_df)):
+        if index_0==0:
+            
+            df_6=container_df[index_0].copy()
+            count=df_6.shape[0]
+            df_6['pass_count']=[index_0]*(count)
+            df_6['pixel_mean']=[container_template[index_0]['pixel_mean'].tolist()[0]]*(count)
+            df_6['pixel_mean_q0']=[container_template[index_0]['pixel_mean_q0'].tolist()[0]]*(count)
+            df_6['pixel_mean_q1']=[container_template[index_0]['pixel_mean_q1'].tolist()[0]]*(count)
+            df_6['pixel_mean_q2']=[container_template[index_0]['pixel_mean_q2'].tolist()[0]]*(count)
+            df_6['pixel_mean_q3']=[container_template[index_0]['pixel_mean_q3'].tolist()[0]]*(count)
+            df_6['ratio']=[container_template[index_0]['ratio'].tolist()[0]]*(count)
+            df_6['angle']=[container_template[index_0]['angle'].tolist()[0]]*(count)
+            df_6['height']=[container_template[index_0]['height'].tolist()[0]]*(count)
+            df_6['width']=[container_template[index_0]['width'].tolist()[0]]*(count)
+            df_6['area']=[container_template[index_0]['area'].tolist()[0]]*(count)
+        else:
+            df_7=container_df[index_0].copy()
+            count=df_7.shape[0]
+            df_7['pass_count']=[index_0]*(count)
+            df_7['pixel_mean']=[container_template[index_0]['pixel_mean'].tolist()[0]]*(count)
+            df_7['pixel_mean_q0']=[container_template[index_0]['pixel_mean_q0'].tolist()[0]]*(count)
+            df_7['pixel_mean_q1']=[container_template[index_0]['pixel_mean_q1'].tolist()[0]]*(count)
+            df_7['pixel_mean_q2']=[container_template[index_0]['pixel_mean_q2'].tolist()[0]]*(count)
+            df_7['pixel_mean_q3']=[container_template[index_0]['pixel_mean_q3'].tolist()[0]]*(count)
+            df_7['ratio']=[container_template[index_0]['ratio'].tolist()[0]]*(count)
+            df_7['angle']=[container_template[index_0]['angle'].tolist()[0]]*(count)
+            df_7['height']=[container_template[index_0]['height'].tolist()[0]]*(count)
+            df_7['width']=[container_template[index_0]['width'].tolist()[0]]*(count)
+            df_7['area']=[container_template[index_0]['area'].tolist()[0]]*(count)
+            df_7=df_7.append(df_6.copy())
+            df_7=df_7.sort_values(by=['y','pass_count'],ascending=[True,False])
+            if container_df[index_0].shape[0]==4:
+                print(df_7)
+            df_7['delta_y']=df_7['y'].diff().shift(-1).fillna(61)
+#            df_7['delta_height']=df_7['height'].diff().shift(-1).fillna(0)
+#            if df_7['delta_height'].max()>15:
+#                print(index_0,df_7['delta_height'].max())
+            if df_7['delta_y'].min()>60:
+                df_6=df_6.append(container_df[index_0].copy())
+                df_6['pixel_mean']=df_6['pixel_mean'].fillna(container_template[index_0]['pixel_mean'].tolist()[0])
+                df_6['pixel_mean_q0']=df_6['pixel_mean_q0'].fillna(container_template[index_0]['pixel_mean_q0'].tolist()[0])
+                df_6['pixel_mean_q1']=df_6['pixel_mean_q1'].fillna(container_template[index_0]['pixel_mean_q1'].tolist()[0])
+                df_6['pixel_mean_q2']=df_6['pixel_mean_q2'].fillna(container_template[index_0]['pixel_mean_q2'].tolist()[0])                
+                df_6['pixel_mean_q3']=df_6['pixel_mean_q3'].fillna(container_template[index_0]['pixel_mean_q3'].tolist()[0])                
+                df_6['ratio']=df_6['ratio'].fillna(container_template[index_0]['ratio'].tolist()[0])                
+                df_6['angle']=df_6['angle'].fillna(container_template[index_0]['angle'].tolist()[0])
+                df_6['height']=df_6['height'].fillna(container_template[index_0]['height'].tolist()[0])
+                df_6['width']=df_6['width'].fillna(container_template[index_0]['width'].tolist()[0])
+                df_6['area']=df_6['area'].fillna(container_template[index_0]['area'].tolist()[0])
+#               
+    return df_6,container_template
 
 
 
@@ -407,9 +394,9 @@ def find_clefs_from_reference(df_0,df_1,img):
 
     
 for val in range(1):
-    df_0,img=init_img_filter('source/scores/img_'+str(val+28)+'.png')
+    df_0,img=init_img_filter('source/scores/img_'+str(val+58)+'.png')
     df_1=find_g_clefs(df_0,img)
-    df_2=find_clefs_from_reference(df_0,df_1,img)
+    df_2,df_3=find_clefs_from_reference(df_0,df_1,img)
     len(df_2.loc[df_2['delta_y']>100])
     
   
