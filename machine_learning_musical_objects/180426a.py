@@ -227,6 +227,24 @@ def find_clefs_from_reference(df_0,df_1,img):
         else:
             df_3=df_3.append(df_2.copy())
     df_3=df_3.sort_values(by=['area'],ascending=[False])
+    
+    df_3=df_3.loc[df_3['width']<df_1['width'].max()*1.1]
+    df_3=df_3.loc[df_3['height']<df_1['height'].max()*1.33]
+    df_3=df_3.loc[df_3['height']>df_1['height'].min()*0.133]
+    df_3=df_3.round({'area':-1,'height':-1,'width':0})
+    df_3['delta_area']=df_3['area'].diff().shift().fillna(0)
+    df_3['delta_height']=df_3['height'].diff().shift().fillna(0)
+    df_3['delta_width']=df_3['width'].diff().shift().fillna(0)
+    hold=df_3.iloc[0:1,:].copy()
+
+    df_3['diff_total']=df_3['delta_area'].add(df_3['delta_height'].add(df_3['delta_width']))
+    df_3=df_3.loc[df_3['diff_total'].abs()>66]
+#    df_3=df_3.loc[df_3['delta_height']!=0]
+#    df_3=df_3.loc[df_3['delta_width']!=0]
+    df_3=df_3.append(hold)
+    print(df_3)
+    
+    
     container_df=[]
     container_template=[]
     for index_1 in range(df_3.shape[0]):
@@ -294,8 +312,8 @@ def find_clefs_from_reference(df_0,df_1,img):
         df_7=df_7.sort_values(by=['y','pass_count'],ascending=[True,False])
 #        print(df_7)
         df_7['delta_y']=df_7['y'].diff().shift(-1).fillna(155)
-
-        if df_7['delta_y'].min()>150:
+        print(df_7['delta_y'].min())
+        if df_7['delta_y'].min()>108:
             df_6=df_6.append(container_df[index_0].copy())
             df_6['pass_count']=df_6['pass_count'].fillna(index_0)
 #            df_6['y1']=df_6['y1'].fillna(df_6['y'].add(df_6['height']))
@@ -315,7 +333,7 @@ def find_clefs_from_reference(df_0,df_1,img):
 
 
 for val in range(1):
-    df_0,img=init_img_filter('source/scores/img_'+str(val+20)+'.png')
+    df_0,img=init_img_filter('source/scores/copland_pass/img_'+str(val+1)+'.png')
     df_1=find_g_clefs(df_0,img)
     df_2,df_3=find_clefs_from_reference(df_0,df_1,img)
     
