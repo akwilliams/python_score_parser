@@ -442,10 +442,10 @@ def calc_staff_font_info(df_0):
             df_1=df_1.loc[df_1['delta_p']>1]
             df_1['delta_line']=df_1['numrow'].diff().shift(-1).fillna(df_1['numrow'].diff().shift())
 
-            if df_1['numrow'].min()<df_1['delta_line'].mean()*1.1:
-                print(np.mean(template_th))
+            if df_1['numrow'].min()<df_1['delta_line'].mean()*2.25:
+                print(np.mean(template_th),df_1)
             else:
-                print('treble clef?')
+                print('treble clef?',df_1)
 #            print([vari for vari in right if vari in left])
 #            for index_2 in range(template_th.shape[1]):
 #                if template_th[index_2,0]>0 and template_th[index_2,0]==template_th[index_2,-1]:
@@ -454,8 +454,12 @@ def calc_staff_font_info(df_0):
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 #            print('break')
+    '''To tell the difference between C clefs and F clef hold the pixel mean
+    of each group and average, if there is a distict difference, the ones with
+    the larger values are c clefs and the smaller F clefs'''
+    
     return df_1
-#df_3=calc_staff_font_info(df_2)
+df_3=calc_staff_font_info(df_2)
 
 
 def find_noteheads_in_systems(df_0,df_1):
