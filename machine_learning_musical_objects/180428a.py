@@ -421,20 +421,23 @@ def find_noteheads_in_systems(df_0,df_1):
         for index_1 in range(df_1[index_0].shape[0]):
 #            print(df_1[index_0].iloc[index_1:index_1+1]['y'].values-25)
             df_2=df_0.loc[df_0['yC']>df_1[index_0].iloc[index_1:index_1+1,:]['y'].values[0]].copy()
-            df_2=df_2.loc[df_2['yC']<df_1[index_0].iloc[index_1+1:index_1+2,:]['y'].values[0]]
-            df_2=df_2.loc[df_2['x0']>df_1[index_0].iloc[index_1:index_1+1,:]['x'].values[0]+25]
+            df_2=df_2.loc[df_2['yC']<df_1[index_0].iloc[index_1:index_1+2,:]['y1'].values[0]]
+            df_2=df_2.loc[df_2['x0']>df_1[index_0].iloc[index_1:index_1+1,:]['x'].values[0]+75]
             df_2=df_2.sort_values(by=['x0'],ascending=[True])
-            df_2=df_2.loc[df_2['height']>df_1[index_0]['height'].mean()*0.5]
+            df_2=df_2.loc[df_2['height']>df_1[index_0]['height'].min()*0.85]
+            df_2=df_2.loc[df_2['height']<df_1[index_0]['height'].max()*1.33]
             df_2=df_2.loc[df_2['ratio']>1.25]
-            for index_2 in range(15):
-                info=df_2.iloc[index_2:,:]
+            for index_2 in range(df_2.shape[0]):
+                
+                info=df_2.iloc[index_2:index_2+1,:]
+                print(info)
                 template=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
 
                 cv2.imshow('template',template)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
                 
-            print(df_2)
+          
     return df_1
 
 
