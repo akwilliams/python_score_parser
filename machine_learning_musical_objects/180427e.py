@@ -205,7 +205,7 @@ def find_clefs_from_reference(df_0,df_1,img):
             container_bounds=np.append(container_bounds,[y,y+h])
 #            container_bounds.append(y+h)
     
-    print(container_bounds.max(),container_bounds.min())
+#    print(container_bounds.max(),container_bounds.min())
     
     container_change=[]
     for index in range(df_1.shape[0]):
@@ -332,16 +332,17 @@ def find_clefs_from_reference(df_0,df_1,img):
     
     df_6['delta_y']=df_6['y'].diff().shift(-1).fillna(0)
     minimum,mean,maximum=df_6.iloc[:-1,:]['delta_y'].min(),df_6.iloc[:-1,:]['delta_y'].mean(),df_6.iloc[:-1,:]['delta_y'].max()
+#    print((maximum-mean)/mean)
     if (maximum-mean)/mean>0.5:
-        for index_0 in range(10):
-            
+#        print('yes')
+        for index_0 in range(10):           
             df_6['delta_y']=df_6['y'].diff().shift(-1).fillna(0)
             minimum,mean,maximum=df_6.iloc[:-1,:]['delta_y'].min(),df_6.iloc[:-1,:]['delta_y'].mean(),df_6.iloc[:-1,:]['delta_y'].max()
             df_6=df_6.reset_index(drop=True)
     #        print((mean-minimum)/mean,(maximum-mean)/mean)
             if (maximum-mean)/mean>0.5:
                 location=df_6['delta_y'].idxmax(axis=1)
-                print(location)
+#                print(location)
                 df_8=df_6.iloc[location:location+2].copy()
                 df_9=df_0.loc[df_0['y0']>df_8['y'].min()+(minimum*0.1)].copy()
                 df_9=df_9.loc[df_9['y1']<df_8['y'].max()-(minimum*0.1)]
@@ -431,7 +432,7 @@ def find_clefs_from_reference(df_0,df_1,img):
 for val in range(1):
     import time
     start=time.time()
-    df_0,img=init_img_filter('source/scores/img_'+str(val+20)+'.png')
+    df_0,img=init_img_filter('source/scores/img_'+str(val+21)+'.png')
     end=time.time()
     print(end-start)
     start=time.time()
