@@ -422,7 +422,11 @@ def calc_staff_font_info(df_0):
         
         for index_1 in range(df_0[index_0].shape[0]):
             info=df_0[index_0].iloc[index_1:,:]
+            print(info['width'].values[0],info['height'].values[0])
+            if info['height'].values[0]<65:
+                info['height'].values[0]=85
             w,h=int(info['width'].values[0]*0.05125),int(info['height'].values[0]*0.05125)
+#            print(w,h)
             if w%2!=1:
                 w=w-1
                 if w<=0:
@@ -434,17 +438,21 @@ def calc_staff_font_info(df_0):
             template=img[info['y'].values[0]:info['y1'].values[0],info['x'].values[0]:info['x'].values[0]+info['width'].values[0]]
             template_blr=cv2.GaussianBlur(template,(w,h),0)
             th,template_th=cv2.threshold(template_blr,165,255,cv2.THRESH_BINARY_INV)
+            cv2.imshow('template',template_th)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 #            print(template_th.shape)
 #            print(np.where(template_th[:,0]==255),np.where(template_th[:,-1]==255))
             df_1=pd.DataFrame(data={'row_0':template_th[:,0].copy(),'row_1':template_th[:,-1].copy()})
             df_1=df_1.divide(2)
             df_1['sum']=df_1['row_0'].add(df_1['row_1'])
             df_1=df_1.loc[df_1['sum']>200]
+            print(df_1)
             df_1['numrow']=df_1.index.tolist()
             df_1['delta_p']=df_1['numrow'].diff().shift(-1).fillna(2)
             df_1=df_1.loc[df_1['delta_p']>5]
             df_1['delta_line']=df_1['numrow'].diff().shift(-1).fillna(df_1['numrow'].diff().shift())
-            
+            print(df_1)
             container_font_info['pixel_mean'].append(np.mean(template_th))
             container_font_info['delta_line'].append(int(df_1['delta_line'].mean()))
             
@@ -452,9 +460,9 @@ def calc_staff_font_info(df_0):
 #                print(np.mean(template_th),df_1)
 #            else:
 #                print('treble clef?',df_1)
-#            cv2.imshow('template',template_th)
-#            cv2.waitKey(0)
-#            cv2.destroyAllWindows()
+            cv2.imshow('template',template_th)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 ##            print('break')
 #        print(df_0[index_0])   
         df_0[index_0]['delta_line']=container_font_info['delta_line']
@@ -465,7 +473,7 @@ def calc_staff_font_info(df_0):
         container_pass_count=df_2['pass_count'].value_counts().copy().index.tolist()
         container_averages=[]
         for index_2 in range(len(container_pass_count)):
-            
+#            print(df_2.loc[df_2['pass_count']==container_pass_count[index_2]]['pixel_mean'])
             container_averages.append(df_2.loc[df_2['pass_count']==container_pass_count[index_2]]['pixel_mean'].mean())
         print(container_pass_count,container_averages)
             
@@ -509,7 +517,7 @@ def find_noteheads_in_systems(df_0,df_1):
 for val in range(1):
 #    import time
 #    start=time.time()
-    df_0,img=init_img_filter('source/scores/img_'+str(val+21)+'.png')
+    df_0,img=init_img_filter('source/scores/img_'+str(val+23)+'.png')
 #    end=time.time()
 #    print(end-start)
 #    start=time.time()
