@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 def init_img_filter(img):
     img=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
@@ -381,84 +382,162 @@ def find_clefs_from_reference(df_0,df_1,img):
     return container_system_info
 
 def calc_staff_font_info(df_0):
+    needs_postprocessing=False
     for index_0 in range(len(df_0)):
-        container_font_info={'pixel_mean':[],'delta_line':[]}        
+        container_font_info={'pixel_mean':[],'delta_line':[],'pass_count':[],'kind':[]}
         for index_1 in range(df_0[index_0].shape[0]):
             info=df_0[index_0].iloc[index_1:,:].copy()
             if info['height'].values[0]<100:
                 height=df_0[index_0]['height'].max()*0.66
-                w,h=int(info['width'].values[0]*0.05125),int(height*0.05125)
-                if w%2!=1:
-                    w=w-1
-                    if w<=0:
-                        w=1
-                if h%2!=1:
-                    h=h-1
-                    if h<=0:
-                        h=1
-                
-                template=img[info['y'].values[0]:int(info['y'].values[0]+height),info['x'].values[0]:info['x'].values[0]+info['width'].values[0]]
-            
+                w,h=int(info['width'].values[0]),1
+                template=img[info['y'].values[0]:int(info['y'].values[0]+height),info['x'].values[0]-1:info['x'].values[0]+info['width'].values[0]+4]            
             else:
-                w,h=int(info['width'].values[0]*0.05125),int(info['height'].values[0]*0.05125)
-                if w%2!=1:
-                    w=w-1
-                    if w<=0:
-                        w=1
-                if h%2!=1:
-                    h=h-1
-                    if h<=0:
-                        h=1
-                template=img[info['y'].values[0]:info['y1'].values[0],info['x'].values[0]:info['x'].values[0]+info['width'].values[0]]
+                w,h=int(info['width'].values[0]),1
+                template=img[info['y'].values[0]:info['y1'].values[0],info['x'].values[0]-1:info['x'].values[0]+info['width'].values[0]+25]
+            if w%2!=1:
+                w=w-1
+                if w<=0:
+                    w=1
+            if h%2!=1:
+                h=h-1
+                if h<=0:
+                    h=1
             template_blr=cv2.GaussianBlur(template,(w,h),0)
             th,template_th=cv2.threshold(template_blr,165,255,cv2.THRESH_BINARY_INV)
-#            cv2.imshow('template',template_th)
-#            cv2.waitKey(0)
-#            cv2.destroyAllWindows()
-#            print(template_th.shape)
-#            print(np.where(template_th[:,0]==255),np.where(template_th[:,-1]==255))
             df_1=pd.DataFrame(data={'row_0':template_th[:,0].copy(),'row_1':template_th[:,-1].copy()})
             df_1=df_1.divide(2)
             df_1['sum']=df_1['row_0'].add(df_1['row_1'])
             df_1=df_1.loc[df_1['sum']>200]
+#            print(df_1)
             df_1['numrow']=df_1.index.tolist()
             df_1['delta_p']=df_1['numrow'].diff().shift(-1).fillna(2)
             df_1=df_1.loc[df_1['delta_p']>5]
-            df_1['delta_line']=df_1['numrow'].diff().shift(-1).fillna(df_1['numrow'].diff().shift())
+#            print(df_1)
+            df_1['delta_line']=df_1['numrow'].diff().shift(-1).fillna(df_1['numrow'].diff().shift().fillna(df_1['delta_p'].max()))
             container_font_info['pixel_mean'].append(np.mean(template_th))
-            container_font_info['delta_line'].append(int(df_1['delta_line'].mean()))
             
-#            cv2.imshow('template',template_th)
-#            cv2.waitKey(0)
-#            cv2.destroyAllWindows()
+            if np.abs(df_1['delta_line'].mean()-df_1['delta_line'].mode()[0]) > 2.5:
+                container_font_info['delta_line'].append(df_1['delta_line'].tolist())
+                needs_postprocessing=True
+            else:
+                container_font_info['delta_line'].append(int(df_1['delta_line'].mean()))
+            
             
         df_0[index_0]['delta_line']=container_font_info['delta_line']
         df_0[index_0]['pixel_mean']=container_font_info['pixel_mean']
+    
+    container_postprocessing_index=[]    
+    if needs_postprocessing==True:
+        for index_0 in range(len(df_0)):
+            df_2=df_0[index_0].copy()
+            df_2=df_2.reset_index(drop=True)
+            for index,row in df_2.iterrows():
+                if type(row['delta_line'])==list:
+                    container_postprocessing_index.append([row['pass_count'],index,index_0,[]])
+    
+    for data in container_postprocessing_index:
+        df_3=df_0[data[2]].loc[df_0[data[2]]['pass_count']==data[0]].copy()
+        for df_temp in df_0:
+            df_4=df_temp.loc[df_temp['pass_count']==data[0]].copy()
+            for val in df_4['delta_line'].values:
+                if type(val) != list:
+                    data[3].append(val)
+        df_0[data[2]]['delta_line'].values[data[1]]=np.mean(data[3])
         
-        df_2=df_0[index_0].loc[df_0[index_0]['pass_count']>-1].copy()
-        container_pass_count=df_2['pass_count'].value_counts().copy().index.tolist()
-        container_averages=[]
-        for index_2 in range(len(container_pass_count)):
-            container_averages.append(df_2.loc[df_2['pass_count']==container_pass_count[index_2]]['pixel_mean'].mean())
-#        print(container_pass_count,container_averages)
-#        if len(container_pass_count)==1 and container_averages[0]<150:
-#            for index_2 in df_0[index_0].loc[df_0[index_0]['pass_count']==container_pass_count[0]].index.tolist()
-#            for index_2 in df_0[index_0].loc[df_0[index_0]['pass_count']==container_pass_count[0]].index.tolist():
-#                if(index_2+1<df_0[index_0].shape[0]):
-#                    df_0[index_0].iloc[index_2:index_2+1,:]['kind'].values[0]='f_clef'
-#                else:
-#                    df_0[index_0].iloc[-1:,:]['kind'].values[0]='f_clef'
+    container_delta_line=np.array([],dtype=np.uint8)
+    for df_temp in df_0:
+        container_delta_line=np.append(container_delta_line,df_temp['delta_line'].values)
+    if container_delta_line.max()!=container_delta_line.min() and container_delta_line.max()-container_delta_line.min()<6:
+        for df_temp in df_0:
+            df_temp['delta_line']=[stats.mode(container_delta_line)[0][0]]*df_temp.shape[0]
+        
+        
+    for df_temp in df_0:
+        df_temp['font_scaling']=df_temp['delta_line'].divide(container_delta_line.mean())
+    
+    
+    return df_0
+
+
+def id_clefs(df_0):
+    
+    df_1=df_0[0].copy()
+    for index_0 in range(len(df_0)-1):
+        df_1=df_1.append(df_0[index_0+1].copy())
+
+    container_pass_counts=np.unique(df_1['pass_count'].values)
+    container_clef_options=['g_clef','c_clef','f_clef']
+    current_clefs=[]
+    for clef in container_clef_options:
+        if df_1.loc[df_1['kind']==clef].shape[0]!=0:
+            current_clefs.append(clef)
+    
+    df_2=df_1.loc[df_1['kind']=='g_clef']
+    df_3=pd.DataFrame(data={'kind':['g_clef'],'height':np.array([df_2['height'].mean()],dtype=np.uint16),'width':np.array([df_2['width'].mean()],dtype=np.uint16),'pixel_mean':np.array([df_2['pixel_mean'].mean()],dtype=np.uint16),'font_scaling':np.array([df_2['font_scaling'].values[0]])})
+    
+    if len(current_clefs) > 1:
+        current_clefs=np.delete(current_clefs,'g_clef')
+        for clef in current_clefs:
+            df_2=df_1.loc[df_1['kind']==clef].copy()
+            df_3=df_3.append(pd.DataFrame(data={'kind':[clef],'height':np.array([df_2['height'].mean()],dtype=np.uint16),'width':np.array([df_2['width'].mean()],dtype=np.uint16),'pixel_mean':np.array([df_2['pixel_mean'].mean()],dtype=np.uint16),'font_scaling':np.array([df_2['font_scaling'].values[0]])}))
+    
+    if len(container_pass_counts) > 1:
+        for pass_count in container_pass_counts:
+            if pass_count >= 0 and pass_count<99:
+                df_2=df_1.loc[df_1['pass_count']==pass_count].copy()
+                df_3=df_3.append(pd.DataFrame(data={'kind':[pass_count],'height':np.array([df_2['height'].mean()],dtype=np.uint16),'width':np.array([df_2['width'].mean()],dtype=np.uint16),'pixel_mean':np.array([df_2['pixel_mean'].mean()],dtype=np.uint16),'font_scaling':np.array([df_2['font_scaling'].values[0]])}))
+    
+    container_missing=np.unique(df_1.loc[df_1['pass_count']==99]['kind'])
+    for index_0 in range(len(container_missing)):
+        df_2=df_1.loc[df_1['kind']==container_missing[index_0]]
+        df_3=df_3.append(pd.DataFrame(data={'kind':['missing_'+str(index_0)],'height':np.array([df_2['height'].mean()],dtype=np.uint16),'width':np.array([df_2['width'].mean()],dtype=np.uint16),'pixel_mean':np.array([df_2['pixel_mean'].mean()],dtype=np.uint16),'font_scaling':np.array([df_2['font_scaling'].values[0]])}))
+    
+    df_3=df_3.sort_values(by=['height'],ascending=[False])
+    df_4=df_3.copy()
+    if type(df_4['font_scaling'].values[0]) == float:
+        df_4[['height','width']]=df_4[['height','width']].divide(df_4['font_scaling'],axis='index')
+    df_4=df_4.reset_index(drop=True)
+    df_4.loc[(df_4['height']>df_4['height'].max()*0.75),'kind']='g_clef'
+    df_4.loc[(df_4['height']<df_4['height'].max()*0.75),'kind']='f_clef'
+    df_4.loc[(df_4['pixel_mean']>df_4['pixel_mean'].mean()*1.2),'kind']='c_clef'
+#    df_4.loc[(df_4['height']<df_4['height'].max()*0.66),'kind']='f_clef'
+    df_3['id']=df_4['kind'].values
+#    container_kind=df_1['kind'].copy().fillna('unknow').tolist()
+    container_missing=[]
+    container_missing_id=[]
+    for index,row in df_3.iterrows():
+        if type(row['kind'])==str:
+            if row['kind'][0]=='m':
+                container_missing.append(row['kind'])
+                container_missing_id.append(row['id'])
+    container_fill=[]
+    for index,row in df_1.iterrows():
+        if type(row['kind'])==str:
+            if row['kind'][0]=='f':
+                container_fill.append(row['kind'])
+    if len(container_fill) > 0 and len(container_missing) > 0:
+        print(np.unique(container_fill),np.unique(container_missing))
+        df_5=pd.DataFrame(data={'missing':np.unique(container_missing),'fill':np.unique(container_fill)})
+        container_missing_index,container_fill_index=[],[]
+        for index,row in df_5.iterrows():
+            container_fill_index.append([int(row['fill'][13]),int(row['fill'][15])])
+            container_missing_index.append(int(row['missing'][8]))
+        df_5['missing_index']=container_missing_index
+        df_5['fill_index']=container_fill_index
+        df_5['id']=container_missing_id
                 
-#        elif len(container_pass_count==2):
-#            #code
-            
-#        print(df_2.index)
-    '''To tell the difference between C clefs and F clef hold the pixel mean
-    of each group and average, if there is a distict difference, the ones with
-    the larger values are c clefs and the smaller F clefs'''
+        print(df_5)
+#    df_1['kind']=container_kind
+#    for index,row in df_3.iterrows():
+#        if type(row['kind']) == str:
+#            if row['kind'][0]=='m':
+#                print(row['kind'][8])
+#            else:
+#                print(row['kind'])
+#        else:
+#            df_1.loc[(df_1['pass_count']==row['kind']),'pass_count']=row['id']
     
     return df_1
-#df_3=calc_staff_font_info(df_2)
 
 
 def find_noteheads_in_systems(df_0,df_1):
@@ -487,41 +566,23 @@ def find_noteheads_in_systems(df_0,df_1):
           
     return df_1
 
-def multithread_test(img):
-    print(img)
-    df_0,img=init_img_filter(img)
+#def multithread_test(img):
+#    print(img)
+#    df_0,img=init_img_filter(img)
+#    df_1=find_g_clefs(df_0,img)
+#    df_2=find_clefs_from_reference(df_0,df_1,img)
+##    df_3=calc_staff_font_info(df_2)
+#    
+#    return df_0,df_1,df_2,df_3
+
+
+for val in [19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65]:
+
+    df_0,img=init_img_filter('source/scores/img_'+str(val)+'.png')
     df_1=find_g_clefs(df_0,img)
     df_2=find_clefs_from_reference(df_0,df_1,img)
-#    df_3=calc_staff_font_info(df_2)
-    
-    return df_0,df_1,df_2,df_3
-
-
-
-#init_fil=[]
-#find_g=[]
-#find_clef=[]
-#calc_font=[]
-for val in [19]:#,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65]:
-    import time
-#    print('source/scores/img_'+str(val)+'.png')
-#    start=time.time()
-    df_0,img=init_img_filter('source/scores/img_'+str(20)+'.png')
-#    end=time.time()
-#    init_fil.append(end-start)
-#    start=time.time()
-    df_1=find_g_clefs(df_0,img)
-#    end=time.time()
-#    find_g.append(end-start)
-#    start=time.time()
-    df_2=find_clefs_from_reference(df_0,df_1,img)
-#    end=time.time()
-#    find_clef.append(end-start)
-#    start=time.time()
-    df_3=calc_staff_font_info(df_2)
-#    end=time.time()
-#    calc_font.append(end-start)
-#    df_4=find_noteheads_in_systems(df_0,df_2)
+    df_2=calc_staff_font_info(df_2)
+    df_3=id_clefs(df_2)
     
     
 #from multiprocessing.dummy import Pool as ThreadPool
