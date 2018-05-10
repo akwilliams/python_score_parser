@@ -104,6 +104,8 @@ def find_g_clefs(df,img):
 #        container_mins=np.append(container_mins,[df_0.loc[df_0['x0']==df_0['x0'].mode()[index_0]]['x0'].min()])
 #    df_0=df_0.loc[df_0['x0']==df_0['x0'].mode()[np.argmin(container_mins)]]
     df_0=df_0.sort_values(by=['x0'],ascending=[True])
+    if df_0.shape[0]>3:
+        df_0=df_0.iloc[:4,:].sort_values(by=['area'])
     w,h=int(df_0['width'].values[0]*0.25),int(df_0['height'].values[0]*0.25)
     if w%2!=1:
         w=w-1
@@ -115,9 +117,9 @@ def find_g_clefs(df,img):
     template=img[df_0['y0'].values[0]:df_0['y1'].values[0],df_0['x0'].values[0]:df_0['x1'].values[0]]
     template_blr=cv2.GaussianBlur(template,(w,h),0)
     
-#    cv2.imshow('template',template)
-#    cv2.waitKey(0)
-#    cv2.destroyAllWindows()
+    cv2.imshow('template',template)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
@@ -133,16 +135,6 @@ def find_g_clefs(df,img):
     df_1=df_1.append(hold)
     df_1=df_1.sort_values(by=['y'],ascending=[True])
     df_1=df_1.reset_index(drop=True)
-    
-#    if df_1.shape[0]>0:
-#        w,h=df_0['width'].values[0],df_0['height'].values[0]
-#        img_dup=img.copy()
-#        for index,row in df_1.iterrows():
-#            cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+w),int(row['y']+h)),[155,155,155],2)
-#        
-#        cv2.imshow('thing',img_dup)
-#        cv2.waitKey(0)
-#        cv2.destroyAllWindows()
       
     if df_1['x'].max()-df_1['x'].min()>1000:
         df_1=df_1.loc[df_1['x']<df_1['x'].mean()]
@@ -243,9 +235,9 @@ def find_clefs_from_reference(df_0,df_1,img):
         template=img[info['y0'].tolist()[0]:info['y1'].tolist()[0],info['x0'].tolist()[0]:info['x1'].tolist()[0]]
         template_blr=cv2.GaussianBlur(template,(w,h),0)
 
-#        cv2.imshow('template',template)
-#        cv2.waitKey(0)
-#        cv2.destroyAllWindows()
+        cv2.imshow('template',template)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
         res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
@@ -397,10 +389,10 @@ def calc_staff_font_info(df_0,img):
             if info['height'].values[0]<100:
                 height=df_0[index_0]['height'].max()*0.66
                 w,h=int(info['width'].values[0]),1
-                template=img[info['y'].values[0]:int(info['y'].values[0]+height),info['x'].values[0]-1:info['x'].values[0]+info['width'].values[0]+4]            
+                template=img[info['y'].values[0]:int(info['y'].values[0]+height),info['x'].values[0]:info['x'].values[0]+info['width'].values[0]]            
             else:
                 w,h=int(info['width'].values[0]),1
-                template=img[info['y'].values[0]:info['y1'].values[0],info['x'].values[0]-1:info['x'].values[0]+info['width'].values[0]+4]
+                template=img[info['y'].values[0]:info['y1'].values[0],info['x'].values[0]:info['x'].values[0]+info['width'].values[0]]
             if w%2!=1:
                 w=w-1
                 if w<=0:
@@ -413,9 +405,11 @@ def calc_staff_font_info(df_0,img):
 #                w=201
 #            print(w,h,template.shape)
             template_blr=cv2.GaussianBlur(template,(w,h),0)
-#            cv2.imshow('template',template)
-#            cv2.waitKey(0)
-#            cv2.destroyAllWindows()
+            
+            cv2.imshow('template',template)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            
             th,template_th=cv2.threshold(template_blr,165,255,cv2.THRESH_BINARY_INV)
             df_1=pd.DataFrame(data={'row_0':template_th[:,0].copy(),'row_1':template_th[:,-1].copy()})
             
@@ -496,6 +490,9 @@ def calc_staff_font_info(df_0,img):
     
     
     return df_0
+
+
+df_2=calc_staff_font_info(df_2,img)
 
 
 def id_clefs(df_0):
@@ -629,7 +626,7 @@ def init_score(fldr_name):
 26 fill missing issue
 '''
 
-for val in [19,20,21,22,23,25,27,28,29,30,31,33,34,35,36,37,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65]:
+for val in [20]:#[19,20,21,22,23,25,27,28,29,30,31,33,34,35,36,37,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65]:
 
     df_0,img=init_img_filter('source/scores/img_'+str(val)+'.png')
     print('init_img_filter')
