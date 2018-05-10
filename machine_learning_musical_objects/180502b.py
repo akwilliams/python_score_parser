@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 
 def init_img_filter(img):
-#    img=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
+    if type(img) is str:
+        img=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
     height,width=img.shape[:2]
     filter_arg=int(width*0.125)
     filter_arg=filter_arg if filter_arg%2==1 else filter_arg+1
@@ -85,7 +86,7 @@ def init_img_filter(img):
             boxes['pixel_mean_q3']=np.append(boxes['pixel_mean_q3'],[0])
 
     df=pd.DataFrame(data=boxes)
-    return df
+    return df,img
 
 
 def find_g_clefs(df,img):
@@ -489,22 +490,22 @@ def find_noteheads_in_systems(df_0,df_1):
 
 def multithread_test(img):
 #    img='source/scores/img_'+str(index)+'.png'
-    df_0=init_img_filter(img)
+    df_0,dead=init_img_filter(img)
     df_1=find_g_clefs(df_0,img)
     df_2=find_clefs_from_reference(df_0,df_1,img)
 #    df_3=calc_staff_font_info(df_2)
     return df_0,df_1,df_2#,df_3
-img_container=[]
-for val in [19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64]:
-    img_container.append(cv2.imread('source/scores/img_'+str(val)+'.png',cv2.IMREAD_GRAYSCALE))
+#img_container=[]
+#for val in [19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64]:
+#    img_container.append(cv2.imread('source/scores/img_'+str(val)+'.png',cv2.IMREAD_GRAYSCALE))
 
-from multiprocessing.dummy import Pool as ThreadPool
-pool=ThreadPool(4)
+#from multiprocessing.dummy import Pool as ThreadPool
+#pool=ThreadPool(4)
 import time
 start_single=time.time()
-for img in img_container:#65]:
+for val in [19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64]:
 #
-    df_0=init_img_filter(img)
+    df_0,img=init_img_filter('source/scores/img_'+str(val)+'.png')
 ##    end=time.time()
 ##    init_fil.append(end-start)
 ##    start=time.time()
@@ -521,19 +522,26 @@ for img in img_container:#65]:
 ##    calc_font.append(end-start)
 ##    df_4=find_noteheads_in_systems(df_0,df_2)
 end_single=time.time()
-total_single=end_single-start_single
 
-#from multiprocessing.dummy import Pool as ThreadPool
-#pool=ThreadPool(3)
+start_loaded=time.time()
 
+img_container=[]
+for val in [19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64]:
+    img_container.append(cv2.imread('source/scores/img_'+str(val)+'.png',cv2.IMREAD_GRAYSCALE))
+
+for img in img_container:
+    df_0,dead=init_img_filter(img)
+    df_1=find_g_clefs(df_0,img)
+    df_2=find_clefs_from_reference(df_0,df_1,img)
+from multiprocessing.dummy import Pool as ThreadPool
+pool=ThreadPool(4)
+end_loaded=time.time()
 start_multi=time.time()
 results = pool.map(multithread_test,img_container)
     
 end_multi=time.time()
-total_multi=end_multi-start_multi  
-    
 
-print(total_single,total_multi)
+print(end_single-start_single,end_loaded-start_loaded,end_multi-start_multi)
     
     
     
