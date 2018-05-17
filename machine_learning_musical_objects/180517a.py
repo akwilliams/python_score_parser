@@ -3,15 +3,22 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 import os
-import pytesseract 
-pytesseract.pytesseract.tesseract_cmd ='/usr/local/bin/tesseract'
 from PIL import Image
-#
+
+'''Import Tesseract'''
+import pytesseract 
+##For MacOS
+#pytesseract.pytesseract.tesseract_cmd ='/usr/local/bin/tesseract'
+##For WindowsOS
+#pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files (x86)/Tesseract-OCR/tesseract'
+
+
+
 ##img=Image.open('source/scores/bartok_piano/img_1.png')
-#img=cv2.imread('source/scores/beethoven_op81/img_0.png',cv2.IMREAD_GRAYSCALE)
-#test_img=Image.fromarray(img)
-#text=pytesseract.image_to_string(test_img,lang='eng')
-#print(text)
+img=cv2.imread('source/scores/beethoven_op81/img_0.png',cv2.IMREAD_GRAYSCALE)
+test_img=Image.fromarray(img)
+text=pytesseract.image_to_string(test_img,lang='eng')
+print(text)
 #
 #img=Image.open('source/scores/beethoven_op81/img_0.png')
 #text=pytesseract.image_to_string(img,lang='deu')
