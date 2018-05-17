@@ -633,11 +633,18 @@ def identify_noteheads(df_0,df_1,img):
         df_2=df_2.loc[df_2['ratio']>1.5]
         df_2=df_2.loc[df_2['ratio']<5]
         print(df_2.shape[0])
+        df_2=df_2.sort_values(by=['x0'],ascending=[True])
         for index,row in df_2.iterrows():
-            cv2.rectangle(img_dup,(int(row['x0']),int(row['y0'])),(int(row['x1']),int(row['y1'])),[155,155,155],2)
-        cv2.imshow('img',img_dup)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+            cv2.imshow('img',img[int(row['y0']-5):int(row['y1']+5),int(row['x0']-5):int(row['x1']+5)])
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            text_img=Image.fromarray(img[int(row['y0']-5):int(row['y1']+5),int(row['x0']-5):int(row['x1']+5)])
+            text=pytesseract.image_to_string(text_img,lang='eng')
+            print(text)
+#            cv2.rectangle(img_dup,(int(row['x0']),int(row['y0'])),(int(row['x1']),int(row['y1'])),[155,155,155],2)
+#        cv2.imshow('img',img_dup)
+#        cv2.waitKey(0)
+#        cv2.destroyAllWindows()
 
 fldr_name= 'Rachmaninoff, Sergei_Bogorditse Devo Opus 37'       
 path= 'source/scores/'+fldr_name+'/'
