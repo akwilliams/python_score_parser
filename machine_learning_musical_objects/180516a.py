@@ -2,6 +2,24 @@ import cv2
 import numpy as np
 import pandas as pd
 from scipy import stats
+import os
+from pytesseract import image_to_string
+from PIL import Image
+
+img=Image.open('source/scores/bartok_piano/img_1.png')
+text=image_to_string(img,lang='ita')
+print(text)
+
+img=Image.open('source/scores/beethoven_op81/img_0.png')
+text=image_to_string(img,lang='deu')
+print(text)
+
+img=Image.open('source/scores/strauss_wanders_strumlied/img_1.png')
+text=image_to_string(img,lang='eng')
+print(text)
+
+
+
 
 def init_img_filter(img):
     img=cv2.imread(img,cv2.IMREAD_GRAYSCALE)
@@ -598,6 +616,18 @@ def id_clefs(df_0):
         df_7=df_1.copy()
     return df_7
 
+def init_score(fldr_name):
+    path= 'source/scores/'+fldr_name+'/'
+    a,b=fldr_name.split('_')
+    score={'page_count':len([name for name in os.listdir(path) if os.path.isfile(os.path.join(path,name))]),'composer':a,'title':b,'voices':[]}
+    df_0,img=init_img_filter(path+'img_0.png')
+    df_1=find_g_clefs(df_0,img)
+    df_2=find_clefs_from_reference(df_0,df_1,img)
+    df_2=calc_staff_font_info(df_2,img)
+    df_3=id_clefs(df_2)
+    print(df_3)
+    return fldr_name
+    
 
 
 def find_noteheads_in_systems(df_0,df_1):
@@ -634,9 +664,9 @@ def find_noteheads_in_systems(df_0,df_1):
 ##    df_3=calc_staff_font_info(df_2)
 #    
 #    return df_0,df_1,df_2,df_3
-
+'''
 results=[]
-for val in [19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65]:
+for val in [19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,40,41,42,43,44,45,46,47,48,49,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66]:
     
     print('in : ',val)
     df_0,img=init_img_filter('source/scores/img_'+str(val)+'.png')
@@ -656,7 +686,15 @@ for val in [19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,40,41,42,43,44,45
 #        print(val)
 #        break
 '''
-65 c-clef parsing issue
+'''
+21 c-clef miss ID at pass_count stage
+36 f-clef miss ID at find_g_clefs stage
+45 duplicate line at find_from_reference
+47 Issue with missing clefs, but I have the template so I believe it has to do with filtering
+62 Could not locate non-g_clefs
+63 find g_clefs did not locate all and that let to issues, I need to look at the find other clefs 
+    parameters because there are a very large difference between delta_y's
+65 not all clefs IDed
 '''
 #from multiprocessing.dummy import Pool as ThreadPool
 #pool=ThreadPool(4)
