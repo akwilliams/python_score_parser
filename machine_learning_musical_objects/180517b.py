@@ -632,40 +632,171 @@ def id_clefs(df_0):
 def identify_noteheads(df_0,df_1,img):
     for index_0 in range(df_1.shape[0]):
         img_dup=img.copy()
+        img_dup_1=img.copy()
         df_2=df_0.loc[df_0['yC']>df_1['y'].values[index_0]].copy()
         df_2=df_2.loc[df_2['yC']<df_1['y'].values[index_0]+df_1['height'].max()]
         df_2=df_2.loc[df_2['xC']>df_1['x'].values[index_0]]
-        df_2=df_2.loc[df_2['height']>3*df_1['delta_line'].values[index_0]]
+        df_2=df_2.loc[df_2['height']>3.5*df_1['delta_line'].values[index_0]]
         print(df_2.shape[0])
         df_2=df_2.loc[df_2['ratio']>1.5]
         df_2=df_2.loc[df_2['ratio']<5]
         print(df_2.shape[0])
-        df_2=df_2.sort_values(by=['x0'],ascending=[True])
+        df_2=df_2.sort_values(by=['x0'],ascending=[False])
         for index,row in df_2.iterrows():
-            cv2.imshow('img',img[int(row['y0']-5):int(row['y1']+5),int(row['x0']-5):int(row['x1']+5)])
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            text_img=Image.fromarray(img[int(row['y0']-5):int(row['y1']+5),int(row['x0']-5):int(row['x1']+5)])
-            text=pytesseract.image_to_string(text_img,lang='eng')
-            print(text)
-#            cv2.rectangle(img_dup,(int(row['x0']),int(row['y0'])),(int(row['x1']),int(row['y1'])),[155,155,155],2)
-#        cv2.imshow('img',img_dup)
-#        cv2.waitKey(0)
-#        cv2.destroyAllWindows()
+            next_stage=False
+            img_dup_blr=cv2.GaussianBlur(img,(5,5),0)
+            template=img[int(row['y0']-5):int(row['y1']+5),int(row['x0']-5):int(row['x1']+5)]
+            
+#            cv2.imshow('template',template)
+#            cv2.waitKey(0)
+#            cv2.destroyAllWindows()
+            
+            template_blr=cv2.GaussianBlur(template,(5,5),0)         
+            res=cv2.matchTemplate(img_dup_blr,template_blr,eval('cv2.TM_SQDIFF_NORMED'))
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)    
+            resolution=0.035 
+            match_locations=np.where(res<=resolution)
+            df_3=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
+            df_3=df_3.sort_values(by=['x'],ascending=[True])
+            df_3['delta_x']=df_3['x'].diff().shift().fillna(df_3['x'].diff().shift(-1))
+            df_3=df_3.loc[df_3['delta_x']>2]
+            df_3=df_3.sort_values(by=['y'],ascending=[True])
+            df_3['delta_y']=df_3['y'].diff().shift().fillna(df_3['y'].diff().shift(-1))
+            df_3=df_3.loc[df_3['delta_y']>2]
+            
+            if df_3.shape[0] > 3:
+                split=int(template.shape[0]/2)
+                next_stage=True
+                break
+                
+        if df_2.shape[0]>1 and next_stage==True:
+            if np.sum(template[:split,:]) > np.sum(template[split:,:]):
+                template_split=template[split:,:].copy()
+            else:
+                template_split=template[:split,:].copy()
+            
+#            cv2.imshow('template_split',template_split)
+#            cv2.waitKey(0)
+#            cv2.destroyAllWindows()
+            
+            bounds_vertical=np.where(template_split[:,int(template.shape[1]/2):int((template_split.shape[1]/2)+1)]<20)
+            df_4=pd.DataFrame(data={'y':bounds_vertical[0]})
+            df_4['delta_y']=df_4['y'].diff().shift().fillna(df_4['y'].diff().shift(-1))
+            df_4['numrow']=df_4.index.tolist()
+            df_4=df_4.loc[df_4['delta_y']>0]
+            df_4['delta_numrow']=df_4['numrow'].diff().shift().fillna(df_4['numrow'].diff().shift(-1))
+            df_4=df_4.loc[df_4['delta_numrow']<2]
+            template_split_vert=template_split[df_4['y'].min():df_3['y'].max(),:].copy()
+            df_5=pd.DataFrame(data={'col_0':template_split_vert[:,1].copy(),'col_1':template_split_vert[:,-1].copy()})
+            df_5=df_5.divide(2)
+            df_5['numrow']=df_5.index.tolist()
+            df_5['sum']=df_5['col_0'].add(df_5['col_1'])
+            df_6=df_5.loc[df_5['sum']<200].copy()
+            df_6['delta_numrow']=df_6['numrow'].diff().shift().fillna(df_6['numrow'].diff().shift(-1))
+            df_7=df_5.loc[df_5['sum']>=200].copy()
+            df_7=df_7.reset_index(drop=True)
+            df_7['delta_numrow']=df_7['numrow'].diff().shift(-1).fillna(df_7['numrow'].diff().shift())
+            if df_6.loc[df_6['delta_numrow']>1].shape[0] > 1:
+                print('LINE')
+#                print(df_7)
+            else:
+                #if on a space
+#                print('SPACE',df_7['delta_numrow'].idxmax(),df_7['numrow'].values[df_7['delta_numrow'].idxmax()+1])
+#                print(df_7)
+                if np.abs(df_7['numrow'].values[0]-df_7['numrow'].values[df_7['delta_numrow'].idxmax()]) > np.abs(df_7['numrow'].values[-1]-df_7['numrow'].values[df_7['delta_numrow'].idxmax()+1]):
+                    template_trimed_vert=template_split_vert[df_7['numrow'].values[0]:df_7['numrow'].values[df_7['delta_numrow'].idxmax()],:].copy()
+                else:
+                    template_trimed_vert=template_split_vert[df_7['numrow'].values[df_7['delta_numrow'].idxmax()+1]:df_7['numrow'].values[-1],:].copy()
+                
+                
+                
+#                cv2.imshow('template_trimed_vert',template_trimed_vert)
+#                cv2.waitKey(0)
+#                cv2.destroyAllWindows()
+                
+                note_location=np.where(template_trimed_vert<=20)
+                df_8=pd.DataFrame(data={'x':note_location[1],'y':note_location[0]})
+                
+                template_trimmed_hor=template_trimed_vert[df_8['y'].min():df_8['y'].max(),df_8['x'].min():df_8['x'].max()]
+#                cv2.imshow('template_trimmed_hor',template_trimmed_hor)
+#                cv2.waitKey(0)
+#                cv2.destroyAllWindows()
+            
+            
+#            print(df_5)
+#            print(df_3)
+#            template_split_vert=template_split[:,np.min(bounds_vertical):np.max(bounds_vertical)].copy()
+            
+#            cv2.imshow('template',template_split_vert)
+#            cv2.waitKey(0)
+#            cv2.destroyAllWindows()
+            
+                img_dup_blr=cv2.GaussianBlur(img,(13,13),0)
+                th,img_dup_th=cv2.threshold(img_dup_blr,225,255,cv2.THRESH_BINARY_INV)
+                template_blr=cv2.GaussianBlur(template_trimmed_hor,(13,13),0)
+                th,template_th=cv2.threshold(template_blr,225,255,cv2.THRESH_BINARY_INV)
+#                
+#                cv2.imshow('img_dup_th',img_dup_th)
+#                cv2.waitKey(0)
+#                cv2.destroyAllWindows()
+             
+                res=cv2.matchTemplate(img_dup_th,template_th,eval('cv2.TM_SQDIFF_NORMED'))
+                min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        
+                resolution=0.045
+     
+                match_locations=np.where(res<=resolution)
+                df_9=pd.DataFrame(data={'x':match_locations[1],'y':match_locations[0]})
+                for index,row in df_9.iterrows():
+                    cv2.rectangle(img_dup,(int(row['x']),int(row['y'])),(int(row['x']+template_trimmed_hor.shape[1]),(int(row['y']+template_trimmed_hor.shape[0]))),[155,155,155],2)
+                cv2.imwrite('result_0.png',img_dup)
+                print(df_9.shape[0],'init')
+                break
+    
+    container_noteheads=[]
+    for index_0 in range(df_1.shape[0]):
+        if index_0!=0 and index_0!=df_1.shape[0]-1:
+            print(container_noteheads[index_0-1]['y'].max(),df_1['y1'].values[index_0]+((df_1['y'].values[index_0+1]-df_1['y1'].values[index_0])/2))
+            container_noteheads.append(df_9.loc[df_9['y']>container_noteheads[index_0-1]['y'].max()].copy())
+            container_noteheads[index_0]=container_noteheads[index_0].loc[container_noteheads[index_0]['y']<df_1['y1'].values[index_0]+((df_1['y'].values[index_0+1]-df_1['y1'].values[index_0])/2)]
+        elif index_0 == df_1.shape[0]-1:
+            print('>',container_noteheads[index_0-1]['y'].max())
+            container_noteheads.append(df_9.loc[df_9['y']>container_noteheads[index_0-1]['y'].max()].copy())
+        elif index_0 == 0:
+            print('<',df_1['y1'].values[index_0]+((df_1['y'].values[index_0+1]-df_1['y1'].values[index_0])/2))
+            container_noteheads.append(df_9.loc[df_9['y']<df_1['y1'].values[index_0]+((df_1['y'].values[index_0+1]-df_1['y1'].values[index_0])/2)].copy())
+    count=0        
+    for index_1 in range(len(container_noteheads)):
+        container_noteheads[index_1]=container_noteheads[index_1].sort_values(by=['x'],ascending=[True])
+        container_noteheads[index_1]['delta_x']=container_noteheads[index_1]['x'].diff().shift(-1).fillna(10)
+#        print(container_noteheads[index_0])
+        container_noteheads[index_1]=container_noteheads[index_1].loc[container_noteheads[index_1]['delta_x']>9]
+#        print(container_noteheads[index_1],'per')
+        count=count+container_noteheads[index_1].shape[0]
+        for index_1,row in container_noteheads[index_1].iterrows():
+            cv2.rectangle(img_dup_1,(int(row['x']),int(row['y'])),(int(row['x']+template_trimmed_hor.shape[1]),(int(row['y']+template_trimmed_hor.shape[0]))),[155,155,155],15)
+    cv2.imwrite('result_1.png',img_dup_1)
+    print(count)
+    return container_noteheads
 
-#fldr_name= 'Rachmaninoff, Sergei_Bogorditse Devo Opus 37'       
-#path= 'source/scores/'+fldr_name+'/'
-#a,b=fldr_name.split('_')
-#score={'page_count':len([name for name in os.listdir(path) if os.path.isfile(os.path.join(path,name))]),'composer':a,'title':b,'voices':[]}
-#df_0,img=init_img_filter(path+'img_0.png')
-#df_1=find_g_clefs(df_0,img)
-#df_2=find_clefs_from_reference(df_0,df_1,img)
-#df_2=calc_staff_font_info(df_2,img)
-#print('system_count: ',len(df_2))
-#df_3=id_clefs(df_2)
-#df_3=df_3.sort_values(by=['y'],ascending=[True])
-#print(df_3)
-#df_4=identify_noteheads(df_0,df_3,img)
+fldr_name='Rachmaninoff, Sergei_Bogorditse Devo Opus 37'
+path= 'source/scores/'+fldr_name+'/'
+a,b=fldr_name.split('_')
+score={'page_count':len([name for name in os.listdir(path) if os.path.isfile(os.path.join(path,name))]),'composer':a,'title':b,'voices':[]}
+df_0,img=init_img_filter(path+'img_0.png')
+df_1=find_g_clefs(df_0,img)
+df_2=find_clefs_from_reference(df_0,df_1,img)
+df_2=calc_staff_font_info(df_2,img)
+print('system_count: ',len(df_2))
+df_3=id_clefs(df_2)
+df_3=df_3.sort_values(by=['y'],ascending=[True])
+print(df_3)
+df_4=identify_noteheads(df_0,df_3,img)
+
+
+cv2.imshow('img',img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 def init_score(fldr_name):
     path= 'source/scores/'+fldr_name+'/'
