@@ -808,75 +808,113 @@ def locate_staff_contents(df_0,df_1,img):
     df_3=df_3.reset_index(drop=True)
     df_4=container_content_bounds.loc[container_content_bounds['ratio']<=0.66].copy()
     
+    container_template=[]
+    container_df=[]
+    
     for index_0,row in df_3.iterrows():
-        if index_0 < 40:
+        if index_0 < 66:
             
-            img_dup_0=img.copy()
-            img_dup_1=img.copy()
-            instance=img[int(row['y0']):int(row['y1']),int(row['x0']):int(row['x1'])].copy()
-            
-            th,instance_th=cv2.threshold(instance,135,255,cv2.THRESH_BINARY)
-            w=int(instance_th.shape[1]*3/5)
-            if w%2!=1:
-                w=w-1
-            instance_th_blr=cv2.GaussianBlur(instance_th,(w,3),0)
-            th,instance_th_blr_th=cv2.threshold(instance_th_blr,135,255,cv2.THRESH_BINARY)
-            locations=np.where(instance_th_blr_th<45)
-            df_5=pd.DataFrame(data={'x':locations[1],'y':locations[0]})
-            instance_trim=instance[df_5['y'].min():df_5['y'].max(),df_5['x'].min():df_5['x'].max()]
-            instance_th_trim=instance_th_blr_th[df_5['y'].min():df_5['y'].max(),df_5['x'].min():df_5['x'].max()]
-            
-            instance_th_trim_padded=cv2.copyMakeBorder(instance_th_trim,50,50,50,50,cv2.BORDER_CONSTANT,value=[255,255,255])
-            hold_0,contours_0,hierarchy=cv2.findContours(instance_th_trim_padded,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-            for c in contours_0:
-                x,y,w,h=cv2.boundingRect(c)
-                if h > instance_trim.shape[0]*3/5 and h < instance_trim.shape[0]*11/10:
-                    instance_bound = instance_trim[y-49:y+h-49,x-49:x+w-49]
-                    instance_th_bound = instance_th_trim[y-49:y+h-49,x-49:x+w-49]
-            locations=[]
-            for index_1 in range(instance_th_bound.shape[0]):
-                if np.mean(instance_th_bound[index_1,:])<45:
-                    locations.append(index_1)
-            df_6=pd.DataFrame(data={'val':locations})
-            df_7=df_6.copy()
-            df_7['delta_val']=df_7['val'].diff().shift(-1).abs().fillna(df_7['val'].diff().shift().abs())
-            df_7=df_7.loc[df_7['delta_val']>1]
-            df_8=df_6.copy()
-            df_8['delta_val']=df_8['val'].diff().shift().abs().fillna(df_8['val'].diff().shift(-1).abs())
-            df_8=df_8.loc[df_8['delta_val']>1]
-            
-            top,bottom=0,instance_th_bound.shape[0]           
-            
-            if df_6['val'].min() < 8:
-                if df_7.shape[0] > 1:
-                    top=int(df_7['val'].min()+2)
-                else:
-                    top=int(df_6.min()+2)
-            if df_6['val'].max() > instance_th_bound.shape[0]-8:
-                if df_8.shape[0] > 1:
-                    bottom=int(df_8['val'].max()-2)
-                else:
-                    bottom=int(df_6['val'].max()-2)
-            if top >=0 and bottom >=0:
-                instance_bound_cleaned=instance_bound[top:bottom,:].copy()
-                instance_th_bound_cleaned=instance_th_bound[top:bottom,:].copy()
-
-                res=cv2.matchTemplate(img_dup_0,instance_bound_cleaned,eval('cv2.TM_SQDIFF_NORMED'))
-                min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-            
-                match_locations=np.where(res<=0.065)
-                df_9=pd.DataFrame(data={'x':np.array(match_locations[1],dtype=np.uint16),'y':np.array(match_locations[0],dtype=np.uint16)})
-                print(index_0,df_9.shape[0])
-                for index_1,row_1 in df_9.iterrows():
-                    cv2.rectangle(img_dup_1,(row_1['x'],row_1['y']),(row_1['x']+instance_bound_cleaned.shape[1],row_1['y']+instance_bound_cleaned.shape[0]),[155,155,155],25)
+          img_dup_0=img.copy()
+          img_dup_1=img.copy()
+          instance=img[int(row['y0']):int(row['y1']),int(row['x0']):int(row['x1'])].copy()
+          
+          th,instance_th=cv2.threshold(instance,135,255,cv2.THRESH_BINARY)
+          w=int(instance_th.shape[1]*3/5)
+          if w%2!=1:
+              w=w-1
+          instance_th_blr=cv2.GaussianBlur(instance_th,(w,3),0)
+          th,instance_th_blr_th=cv2.threshold(instance_th_blr,135,255,cv2.THRESH_BINARY)
+          locations=np.where(instance_th_blr_th<45)
+          df_5=pd.DataFrame(data={'x':locations[1],'y':locations[0]})
+          instance_trim=instance[df_5['y'].min():df_5['y'].max(),df_5['x'].min():df_5['x'].max()]
+          instance_th_trim=instance_th_blr_th[df_5['y'].min():df_5['y'].max(),df_5['x'].min():df_5['x'].max()]
+          
+          instance_th_trim_padded=cv2.copyMakeBorder(instance_th_trim,50,50,50,50,cv2.BORDER_CONSTANT,value=[255,255,255])
+          hold_0,contours_0,hierarchy=cv2.findContours(instance_th_trim_padded,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+          for c in contours_0:
+              x,y,w,h=cv2.boundingRect(c)
+              if h > instance_trim.shape[0]*3/5 and h < instance_trim.shape[0]*11/10:
+                  instance_bound = instance_trim[y-49:y+h-49,x-49:x+w-49]
+                  instance_th_bound = instance_th_trim[y-49:y+h-49,x-49:x+w-49]
+          locations=[]
+          for index_1 in range(instance_th_bound.shape[0]):
+              if np.mean(instance_th_bound[index_1,:])<45:
+                  locations.append(index_1)
+          df_6=pd.DataFrame(data={'val':locations})
+          df_7=df_6.copy()
+          df_7['delta_val']=df_7['val'].diff().shift(-1).abs().fillna(df_7['val'].diff().shift().abs())
+          df_7=df_7.loc[df_7['delta_val']>1]
+          df_8=df_6.copy()
+          df_8['delta_val']=df_8['val'].diff().shift().abs().fillna(df_8['val'].diff().shift(-1).abs())
+          df_8=df_8.loc[df_8['delta_val']>1]
+          
+          top,bottom=0,instance_th_bound.shape[0]           
+          
+          if df_6['val'].min() < 8:
+              if df_7.shape[0] > 1:
+                  top=int(df_7['val'].min()+2)
+              else:
+                  top=int(df_6.min()+2)
+          if df_6['val'].max() > instance_th_bound.shape[0]-8:
+              if df_8.shape[0] > 1:
+                  bottom=int(df_8['val'].max()-2)
+              else:
+                  bottom=int(df_6['val'].max()-2)
+          if top >=0 and bottom >=0:
+              instance_bound_cleaned=instance_bound[top:bottom,:].copy()
+              instance_th_bound_cleaned=instance_th_bound[top:bottom,:].copy()
+  
+              res=cv2.matchTemplate(img_dup_0,instance_bound_cleaned,eval('cv2.TM_SQDIFF_NORMED'))
+              min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+          
+              match_locations=np.where(res<=0.065)
+              df_9=pd.DataFrame(data={'x':np.array(match_locations[1],dtype=np.uint16),'y':np.array(match_locations[0],dtype=np.uint16)})
+              df_9['width']=[instance_bound_cleaned.shape[1]]*df_9.shape[0]
+              df_9['height']=[instance_bound_cleaned.shape[0]]*df_9.shape[0]
+  #                print(index_0,df_9.shape[0])
+              if len(container_template)<1:
                 
-                cv2.imwrite('result_'+str(index_0)+'.png',img_dup_1)
-                cv2.imwrite('template_'+str(index_0)+'.png',instance_bound_cleaned)
-#                cv2.imshow('instance_bound_cleaned',instance_bound_cleaned)
-#                cv2.imshow('instance_th_bound_cleaned',instance_th_bound_cleaned)
-##                cv2.imshow('instance',instance)
-#                cv2.waitKey(0)
-#                cv2.destroyAllWindows()
+                print(index_0,df_9.shape[0])
+                container_template.append(instance_bound_cleaned.copy())
+                container_df.append(df_9.copy())
+              else:
+                if container_df[-1].shape[0]!=df_9.shape[0]:
+                  print(index_0,df_9.shape[0])
+                  container_template.append(instance_bound_cleaned.copy())
+                  container_df.append(df_9.copy())
+                else:
+                  img_ref=cv2.copyMakeBorder(container_template[-1].copy(),50,50,50,50,cv2.BORDER_CONSTANT,value=[255,255,255])
+                  res=cv2.matchTemplate(img_ref,instance_bound_cleaned,eval('cv2.TM_SQDIFF_NORMED'))
+                  min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+                  if min_val > 0.065:
+                    print(index_0,df_9.shape[0])
+                    container_template.append(instance_bound_cleaned.copy())  
+                    container_df.append(df_9.copy())
+  #                for index_1,row_1 in df_9.iterrows():
+  #                    cv2.rectangle(img_dup_1,(row_1['x'],row_1['y']),(row_1['x']+instance_bound_cleaned.shape[1],row_1['y']+instance_bound_cleaned.shape[0]),[155,155,155],25)
+  #                
+  #                cv2.imwrite('result_'+str(index_0)+'.png',img_dup_1)
+  #                cv2.imwrite('template_'+str(index_0)+'.png',instance_bound_cleaned)
+  #                cv2.imshow('instance_bound_cleaned',instance_bound_cleaned)
+  #                cv2.imshow('instance_th_bound_cleaned',instance_th_bound_cleaned)
+  ##                cv2.imshow('instance',instance)
+  #                cv2.waitKey(0)
+  #                cv2.destroyAllWindows()
+        
+        
+    for index_0 in range(len(container_df)):
+      img_dup_2=img.copy()
+#      container_df[index_0]=container_df[index_0].sort_values(by=['y','x'],ascending=[True,True])
+#      container_df[index_0]['delta_x']=container_df[index_0]['x'].diff().shift(-1).abs().fillna(container_df[index_0]['x'].diff().shift().abs())
+#      container_df[index_0]['delta_y']=container_df[index_0]['y'].diff().shift(-1).abs().fillna(container_df[index_0]['y'].diff().shift().abs())
+#      container_df[index_0]=container_df[index_0].loc[container_df[index_0]['delta_y']>3]
+#      container_df[index_0]=container_df[index_0].loc[container_df[index_0]['delta_x']>3]
+      if container_df[index_0].shape[0]<2500:
+        for index_1,row_1 in container_df[index_0].iterrows():
+          cv2.rectangle(img_dup_2,(int(row_1['x']),int(row_1['y'])),(int(row_1['x']+row_1['width']),int(row_1['y']+row_1['height'])),[155,155,155],5)
+        cv2.imwrite('result_'+str(index_0)+'.png',img_dup_2)          
+        cv2.imwrite('template_'+str(index_0)+'.png',container_template[index_0])    
+        
         
     return container_content_bounds
 
@@ -888,7 +926,7 @@ def locate_staff_contents(df_0,df_1,img):
 path= 'source/scores/'
 #a,b=fldr_name.split('_')
 #score={'page_count':len([name for name in os.listdir(path) if os.path.isfile(os.path.join(path,name))]),'composer':a,'title':b,'voices':[]}
-df_0,img=init_img_filter(path+'img_66.png')
+df_0,img=init_img_filter(path+'img_40.png')
 df_1=find_g_clefs(df_0,img)
 df_2=find_clefs_from_reference(df_0,df_1,img)
 df_2=calc_staff_font_info(df_2,img)
