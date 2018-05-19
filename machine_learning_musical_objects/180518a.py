@@ -810,17 +810,79 @@ def locate_staff_contents(df_0,df_1,img):
     
     for index_0,row in df_3.iterrows():
         if index_0 < 40:
+            
+            img_dup_0=img.copy()
+            img_dup_1=img.copy()
             instance=img[int(row['y0']):int(row['y1']),int(row['x0']):int(row['x1'])].copy()
             
             th,instance_th=cv2.threshold(instance,135,255,cv2.THRESH_BINARY)
-            locations=np.where(instance_th<45)
+            w=int(instance_th.shape[1]*3/5)
+            if w%2!=1:
+                w=w-1
+            instance_th_blr=cv2.GaussianBlur(instance_th,(w,3),0)
+            th,instance_th_blr_th=cv2.threshold(instance_th_blr,135,255,cv2.THRESH_BINARY)
+            locations=np.where(instance_th_blr_th<45)
             df_5=pd.DataFrame(data={'x':locations[1],'y':locations[0]})
             instance_trim=instance[df_5['y'].min():df_5['y'].max(),df_5['x'].min():df_5['x'].max()]
+            instance_th_trim=instance_th_blr_th[df_5['y'].min():df_5['y'].max(),df_5['x'].min():df_5['x'].max()]
             
-            cv2.imshow('trim',instance_trim)
-            cv2.imshow('instance',instance)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            instance_th_trim_padded=cv2.copyMakeBorder(instance_th_trim,50,50,50,50,cv2.BORDER_CONSTANT,value=[255,255,255])
+            hold_0,contours_0,hierarchy=cv2.findContours(instance_th_trim_padded,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+            for c in contours_0:
+                x,y,w,h=cv2.boundingRect(c)
+                if h > instance_trim.shape[0]*3/5 and h < instance_trim.shape[0]*11/10:
+                    instance_bound = instance_trim[y-49:y+h-49,x-49:x+w-49]
+                    instance_th_bound = instance_th_trim[y-49:y+h-49,x-49:x+w-49]
+            locations=[]
+            for index_1 in range(instance_th_bound.shape[0]):
+                if np.mean(instance_th_bound[index_1,:])<45:
+                    locations.append(index_1)
+            df_6=pd.DataFrame(data={'val':locations})
+            df_7=df_6.copy()
+            df_7['delta_val']=df_7['val'].diff().shift(-1).abs().fillna(df_7['val'].diff().shift().abs())
+            df_7=df_7.loc[df_7['delta_val']>1]
+            df_8=df_6.copy()
+            df_8['delta_val']=df_8['val'].diff().shift().abs().fillna(df_8['val'].diff().shift(-1).abs())
+            df_8=df_8.loc[df_8['delta_val']>1]
+            
+            top,bottom=0,instance_th_bound.shape[0]
+#            print('org: ',top,bottom)
+            
+            
+            if df_6['val'].min() < 8:
+                if df_7.shape[0] > 1:
+                    top=int(df_7['val'].min()+2)
+                    print(top,df_7)
+                else:
+                    top=int(df_6.min()+2)
+#                    print(top,'df_6')
+            if df_6['val'].max() > instance_th_bound.shape[0]-8:
+                if df_8.shape[0] > 1:
+                    bottom=int(df_8['val'].max()-2)
+#                    print(bottom,df_8)
+                else:
+                    bottom=int(df_6['val'].max()-2)
+#                    print(bottom,'df_6')
+#            print('final: ',top,bottom)
+            if top >=0 and bottom >=0:
+                instance_bound_cleaned=instance_bound[top:bottom,:].copy()
+                instance_th_bound_cleaned=instance_th_bound[top:bottom,:].copy()
+
+                res=cv2.matchTemplate(img_dup_0,instance_bound_cleaned,eval('cv2.TM_SQDIFF_NORMED'))
+                min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+            
+                match_locations=np.where(res<=0.035)
+                df_9=pd.DataFrame(data={'x':np.array(match_locations[1],dtype=np.uint16),'y':np.array(match_locations[0],dtype=np.uint16)})
+                
+                for index_1,row in df_9.iterrows():
+                    cv2.rectange(img_dup_1,(row['x'],row['y']),(instance_bound_cleaned.shape[1],instance_bound_cleaned.shape[0]),[155,155,155],2)
+                
+                cv2.imwrite('result_'+str(index_0)+'.png',img_dup_1)
+#                cv2.imshow('instance_bound_cleaned',instance_bound_cleaned)
+#                cv2.imshow('instance_th_bound_cleaned',instance_th_bound_cleaned)
+##                cv2.imshow('instance',instance)
+#                cv2.waitKey(0)
+#                cv2.destroyAllWindows()
         
     return container_content_bounds
 
@@ -832,7 +894,7 @@ def locate_staff_contents(df_0,df_1,img):
 path= 'source/scores/'
 #a,b=fldr_name.split('_')
 #score={'page_count':len([name for name in os.listdir(path) if os.path.isfile(os.path.join(path,name))]),'composer':a,'title':b,'voices':[]}
-df_0,img=init_img_filter(path+'img_23.png')
+df_0,img=init_img_filter(path+'img_49.png')
 df_1=find_g_clefs(df_0,img)
 df_2=find_clefs_from_reference(df_0,df_1,img)
 df_2=calc_staff_font_info(df_2,img)
